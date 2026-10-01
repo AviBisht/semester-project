@@ -30,16 +30,14 @@ export default function ReportIncidentPage() {
   // Form states
   const [incidentType, setIncidentType] = useState('Flooding/Waterlogging');
   const [description, setDescription] = useState('');
-  const [latitude, setLatitude] = useState(null); // No default pin
-  const [longitude, setLongitude] = useState(null);
-  const [locationName, setLocationName] = useState('');
-  const [locationError, setLocationError] = useState('');
+  const [latitude, setLatitude] = useState(30.3165); // Default Dehradun center
+  const [longitude, setLongitude] = useState(78.0322);
+  const [locationName, setLocationName] = useState('Dehradun City Center (Pinned)');
   const [peopleAffected, setPeopleAffected] = useState(1);
   const [vulnerableInvolved, setVulnerableInvolved] = useState(false);
   const [severity, setSeverity] = useState(3);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [photoError, setPhotoError] = useState('');
 
   // Submission & Confirmation state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +49,6 @@ export default function ReportIncidentPage() {
     setLatitude(coords.latitude);
     setLongitude(coords.longitude);
     setLocationName(`Custom Pin (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`);
-    setLocationError('');
   };
 
   // "Use my location" button
@@ -67,57 +64,27 @@ export default function ReportIncidentPage() {
         setLatitude(lat);
         setLongitude(lng);
         setLocationName(`Current Device Location (${lat}, ${lng})`);
-        setLocationError('');
       },
       (err) => {
-        alert('Could not retrieve current location. Please click on the map to drop a pin.');
+        alert('Could not retrieve current location. Using Dehradun fallback.');
       },
       { timeout: 10000 }
     );
   };
 
-  // Handle photo file selection with client-side validation
+  // Handle photo file selection
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    const maxBytes = 5 * 1024 * 1024; // 5 MB
-
-    if (!allowedTypes.includes(file.type) || file.size > maxBytes) {
+    if (file) {
       setPhotoFile(file);
-      setPhotoPreview(null);
-      setPhotoError('Photo must be a JPG, PNG or WEBP under 5 MB.');
-      return;
+      setPhotoPreview(URL.createObjectURL(file));
     }
-
-    setPhotoError('');
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
-    setLocationError('');
-
-    // If no pin is placed, block submit and show inline error under the map
-    if (latitude == null || longitude == null) {
-      setLocationError('Please select the incident location on the map.');
-      return;
-    }
-
-    // Client-side photo validation check
-    if (photoFile) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      const maxBytes = 5 * 1024 * 1024;
-      if (!allowedTypes.includes(photoFile.type) || photoFile.size > maxBytes || photoError) {
-        setPhotoError('Photo must be a JPG, PNG or WEBP under 5 MB.');
-        return;
-      }
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -125,19 +92,12 @@ export default function ReportIncidentPage() {
 
       // 1. Upload photo if selected
       if (photoFile) {
-        try {
-          const formData = new FormData();
-          formData.append('file', photoFile);
-          const uploadRes = await api.post('/api/incidents/upload-photo', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
-          photoUrl = uploadRes.data.photo_url;
-        } catch (uploadErr) {
-          const backendMsg = uploadErr.response?.data?.detail || 'Photo must be a JPG, PNG or WEBP under 5 MB.';
-          setPhotoError(backendMsg);
-          setIsSubmitting(false);
-          return;
-        }
+        const formData = new FormData();
+        formData.append('file', photoFile);
+        const uploadRes = await api.post('/api/incidents/upload-photo', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        photoUrl = uploadRes.data.photo_url;
       }
 
       // 2. Submit incident data
@@ -250,11 +210,10 @@ export default function ReportIncidentPage() {
                       type="button"
                       key={type}
                       onClick={() => setIncidentType(type)}
-                      className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all ${
-                        isSelected
+                      className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all ${isSelected
                           ? 'border-[#1F3A4D] bg-[#A9CCE3]/30 text-[#1F3A4D]'
                           : 'border-[#E8E2D9] bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <span>{type}</span>
@@ -289,9 +248,7 @@ export default function ReportIncidentPage() {
                 </label>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] text-gray-500 font-mono">
-                    {latitude != null && longitude != null
-                      ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-                      : 'No location selected'}
+                    {latitude.toFixed(4)}, {longitude.toFixed(4)}
                   </span>
                   <button
                     type="button"
@@ -311,21 +268,13 @@ export default function ReportIncidentPage() {
 
               {/* Leaflet map with dropped pin */}
               <IncidentMap
-                center={latitude != null && longitude != null ? [latitude, longitude] : [30.3165, 78.0322]}
+                center={[latitude, longitude]}
                 zoom={14}
                 height="280px"
-                droppedLocation={latitude != null && longitude != null ? { latitude, longitude } : null}
+                droppedLocation={{ latitude, longitude }}
                 onLocationSelect={handleMapLocationSelect}
                 showLegend={false}
               />
-
-              {/* Inline Location Error */}
-              {locationError && (
-                <div className="p-3 mt-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{locationError}</span>
-                </div>
-              )}
             </div>
 
             {/* 4. Impact metrics: People Affected & Vulnerable Groups */}
@@ -358,22 +307,20 @@ export default function ReportIncidentPage() {
                   <button
                     type="button"
                     onClick={() => setVulnerableInvolved(true)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                      vulnerableInvolved
+                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${vulnerableInvolved
                         ? 'bg-[#F2C6CF]/50 border-[#6B2B3A] text-[#6B2B3A]'
                         : 'border-[#E8E2D9] bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     Yes (Elderly / Children / Disabled)
                   </button>
                   <button
                     type="button"
                     onClick={() => setVulnerableInvolved(false)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                      !vulnerableInvolved
+                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${!vulnerableInvolved
                         ? 'bg-[#FAF7F2] border-[#1F3A4D] text-[#1F3A4D]'
                         : 'border-[#E8E2D9] bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     No
                   </button>
@@ -397,11 +344,10 @@ export default function ReportIncidentPage() {
                       type="button"
                       key={level}
                       onClick={() => setSeverity(level)}
-                      className={`py-3 rounded-xl border text-center transition-all ${
-                        isSelected
+                      className={`py-3 rounded-xl border text-center transition-all ${isSelected
                           ? 'border-[#1F3A4D] bg-[#A9CCE3] text-[#1F3A4D] font-bold shadow-sm'
                           : 'border-[#E8E2D9] bg-white text-gray-700 hover:bg-gray-50 font-medium'
-                      }`}
+                        }`}
                     >
                       <span className="text-base block">{level}</span>
                       <span className="text-[10px] text-gray-600 block mt-0.5">
@@ -448,20 +394,11 @@ export default function ReportIncidentPage() {
                     onClick={() => {
                       setPhotoFile(null);
                       setPhotoPreview(null);
-                      setPhotoError('');
                     }}
                     className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm"
                   >
                     &times;
                   </button>
-                </div>
-              )}
-
-              {/* Inline Photo Error */}
-              {photoError && (
-                <div className="p-3 mt-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{photoError}</span>
                 </div>
               )}
             </div>

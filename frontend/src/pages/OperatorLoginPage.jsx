@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { ShieldCheck, Lock, User, AlertCircle, KeyRound } from 'lucide-react';
+import { ShieldCheck, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function OperatorLoginPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('operator');
-  const [password, setPassword] = useState('operator123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -52,17 +53,6 @@ export default function OperatorLoginPage() {
           </p>
         </div>
 
-        {/* Demo credentials notification */}
-        <div className="mb-5 p-3 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9] text-xs text-gray-600">
-          <div className="flex items-center gap-1.5 font-semibold text-[#1F3A4D] mb-1">
-            <KeyRound className="w-3.5 h-3.5 text-sky-700" />
-            <span>College Mini-Project Pre-Seeded Operator:</span>
-          </div>
-          <p className="text-[11px] font-mono">
-            Username: <strong className="text-gray-800">operator</strong> &bull; Password: <strong className="text-gray-800">operator123</strong>
-          </p>
-        </div>
-
         {errorMessage && (
           <div className="p-3 mb-5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -80,6 +70,7 @@ export default function OperatorLoginPage() {
               <input
                 type="text"
                 required
+                placeholder="Enter operator username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full text-xs sm:text-sm rounded-xl border border-[#E8E2D9] pl-9 pr-3 py-2.5 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#A9CCE3]"
@@ -94,12 +85,21 @@ export default function OperatorLoginPage() {
             <div className="relative">
               <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full text-xs sm:text-sm rounded-xl border border-[#E8E2D9] pl-9 pr-3 py-2.5 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#A9CCE3]"
+                className="w-full text-xs sm:text-sm rounded-xl border border-[#E8E2D9] pl-9 pr-10 py-2.5 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#A9CCE3]"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

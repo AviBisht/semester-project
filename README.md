@@ -125,29 +125,3 @@ Frontend Web App will be live at: `http://127.0.0.1:5173/`
 ```powershell
 .\start_servers.ps1
 ```
-
----
-
-## Deployment
-
-### Backend (Render Web Service)
-- **Root Directory**: `backend`
-- **Environment**: Python 3
-- **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- **Environment Variables**:
-  - `SECRET_KEY`: A long, random secret string for JWT signing.
-  - `ALLOWED_ORIGINS`: Comma-separated list of allowed frontend URLs (e.g. `https://your-app.vercel.app`).
-  - `OPERATOR_PASSWORD`: Secure password for the pre-seeded `operator` account.
-  - `PYTHON_VERSION`: e.g. `3.11.9` or `3.12.0`.
-
-> **Note on Render Free Tier**: Render's free tier uses an ephemeral filesystem. SQLite database data and uploaded photos reset when the service spins down or redeploys; the backend seed script automatically restores the demo operator user, emergency response teams, and sample incidents on every startup.
-
-### Frontend (Vercel)
-- **Root Directory**: `frontend`
-- **Framework Preset**: Vite
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Environment Variables**:
-  - `VITE_API_URL`: Your deployed Render backend URL (e.g. `https://your-backend.onrender.com`).
-

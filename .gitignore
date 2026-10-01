@@ -62,8 +62,3 @@ venv.bak/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Database & User Uploads
-*.db
-backend/uploads/*
-!backend/uploads/.gitkeep
