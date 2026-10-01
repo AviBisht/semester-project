@@ -42,10 +42,9 @@ app = FastAPI(
 )
 
 # Enable CORS for Vite frontend
-origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -96,47 +95,13 @@ def get_me(current_user: User = Depends(get_current_user)):
 @app.post("/api/incidents/upload-photo")
 async def upload_incident_photo(file: UploadFile = File(...)):
     """Endpoint for citizens to optionally upload an incident photo."""
-    # Allowed extensions only: .jpg, .jpeg, .png, .webp
-    ext = os.path.splitext(file.filename or "")[1].lower()
-    if ext not in [".jpg", ".jpeg", ".png", ".webp"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only JPG, PNG or WEBP images are allowed."
-        )
-
-    # Max size 5 MB (5 * 1024 * 1024 bytes)
-    MAX_FILE_SIZE = 5 * 1024 * 1024
+    # Sanitize and create unique filename
+    ext = os.path.splitext(file.filename)[1] or ".jpg"
     unique_filename = f"{uuid.uuid4().hex[:10]}{ext}"
     destination = os.path.join(UPLOAD_DIR, unique_filename)
 
-    total_size = 0
-    try:
-        with open(destination, "wb") as buffer:
-            while chunk := await file.read(1024 * 64):
-                total_size += len(chunk)
-                if total_size > MAX_FILE_SIZE:
-                    buffer.close()
-                    if os.path.exists(destination):
-                        os.remove(destination)
-                    raise HTTPException(
-                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                        detail="Photo must be under 5 MB."
-                    )
-                buffer.write(chunk)
-    except HTTPException:
-        if os.path.exists(destination):
-            try:
-                os.remove(destination)
-            except OSError:
-                pass
-        raise
-    except Exception:
-        if os.path.exists(destination):
-            try:
-                os.remove(destination)
-            except OSError:
-                pass
-        raise HTTPException(status_code=500, detail="Failed to save image file.")
+    with open(destination, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
 
     return {"photo_url": f"/uploads/{unique_filename}"}
 
@@ -146,18 +111,6 @@ def report_incident(data: IncidentCreate, db: Session = Depends(get_db)):
     Public reporting endpoint: Citizen submits incident without authentication.
     Computes priority score, assigns a tracking ID, and saves to database.
     """
-    # Reject requests with missing or out-of-range latitude/longitude with 422 error
-    if data.latitude is None or not (-90.0 <= data.latitude <= 90.0):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Missing or out-of-range latitude (-90.0 to 90.0 required)"
-        )
-    if data.longitude is None or not (-180.0 <= data.longitude <= 180.0):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Missing or out-of-range longitude (-180.0 to 180.0 required)"
-        )
-
     # 1. Compute priority score and breakdown using exact project formula
     score, level, breakdown = calculate_priority_score(
         severity=data.severity,
