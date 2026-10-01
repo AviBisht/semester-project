@@ -42,10 +42,11 @@ app = FastAPI(
 )
 
 # Enable CORS for Vite frontend
+origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -95,13 +96,47 @@ def get_me(current_user: User = Depends(get_current_user)):
 @app.post("/api/incidents/upload-photo")
 async def upload_incident_photo(file: UploadFile = File(...)):
     """Endpoint for citizens to optionally upload an incident photo."""
-    # Sanitize and create unique filename
-    ext = os.path.splitext(file.filename)[1] or ".jpg"
+    # Allowed extensions only: .jpg, .jpeg, .png, .webp
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in [".jpg", ".jpeg", ".png", ".webp"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only JPG, PNG or WEBP images are allowed."
+        )
+
+    # Max size 5 MB (5 * 1024 * 1024 bytes)
+    MAX_FILE_SIZE = 5 * 1024 * 1024
     unique_filename = f"{uuid.uuid4().hex[:10]}{ext}"
     destination = os.path.join(UPLOAD_DIR, unique_filename)
 
-    with open(destination, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    total_size = 0
+    try:
+        with open(destination, "wb") as buffer:
+            while chunk := await file.read(1024 * 64):
+                total_size += len(chunk)
+                if total_size > MAX_FILE_SIZE:
+                    buffer.close()
+                    if os.path.exists(destination):
+                        os.remove(destination)
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail="Photo must be under 5 MB."
+                    )
+                buffer.write(chunk)
+    except HTTPException:
+        if os.path.exists(destination):
+            try:
+                os.remove(destination)
+            except OSError:
+                pass
+        raise
+    except Exception:
+        if os.path.exists(destination):
+            try:
+                os.remove(destination)
+            except OSError:
+                pass
+        raise HTTPException(status_code=500, detail="Failed to save image file.")
 
     return {"photo_url": f"/uploads/{unique_filename}"}
 

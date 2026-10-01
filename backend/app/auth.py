@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 import bcrypt
 import jwt
@@ -8,7 +9,7 @@ from .database import get_db
 from .models import User
 
 # JWT Config
-SECRET_KEY = "mini-project-secret-key-emergency-dehradun-2026"
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-secret-change-me")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 

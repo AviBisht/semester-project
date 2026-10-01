@@ -39,6 +39,7 @@ export default function ReportIncidentPage() {
   const [severity, setSeverity] = useState(3);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoError, setPhotoError] = useState('');
 
   // Submission & Confirmation state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,13 +76,24 @@ export default function ReportIncidentPage() {
     );
   };
 
-  // Handle photo file selection
+  // Handle photo file selection with client-side validation
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxBytes = 5 * 1024 * 1024; // 5 MB
+
+    if (!allowedTypes.includes(file.type) || file.size > maxBytes) {
       setPhotoFile(file);
-      setPhotoPreview(URL.createObjectURL(file));
+      setPhotoPreview(null);
+      setPhotoError('Photo must be a JPG, PNG or WEBP under 5 MB.');
+      return;
     }
+
+    setPhotoError('');
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
   // Handle form submission
@@ -96,6 +108,16 @@ export default function ReportIncidentPage() {
       return;
     }
 
+    // Client-side photo validation check
+    if (photoFile) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      const maxBytes = 5 * 1024 * 1024;
+      if (!allowedTypes.includes(photoFile.type) || photoFile.size > maxBytes || photoError) {
+        setPhotoError('Photo must be a JPG, PNG or WEBP under 5 MB.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -103,12 +125,19 @@ export default function ReportIncidentPage() {
 
       // 1. Upload photo if selected
       if (photoFile) {
-        const formData = new FormData();
-        formData.append('file', photoFile);
-        const uploadRes = await api.post('/api/incidents/upload-photo', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        photoUrl = uploadRes.data.photo_url;
+        try {
+          const formData = new FormData();
+          formData.append('file', photoFile);
+          const uploadRes = await api.post('/api/incidents/upload-photo', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          photoUrl = uploadRes.data.photo_url;
+        } catch (uploadErr) {
+          const backendMsg = uploadErr.response?.data?.detail || 'Photo must be a JPG, PNG or WEBP under 5 MB.';
+          setPhotoError(backendMsg);
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       // 2. Submit incident data
@@ -419,11 +448,20 @@ export default function ReportIncidentPage() {
                     onClick={() => {
                       setPhotoFile(null);
                       setPhotoPreview(null);
+                      setPhotoError('');
                     }}
                     className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm"
                   >
                     &times;
                   </button>
+                </div>
+              )}
+
+              {/* Inline Photo Error */}
+              {photoError && (
+                <div className="p-3 mt-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{photoError}</span>
                 </div>
               )}
             </div>

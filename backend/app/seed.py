@@ -1,3 +1,4 @@
+import os
 import json
 from sqlalchemy.orm import Session
 from .models import User, Resource, Incident, IncidentUpdate, Assignment
@@ -12,14 +13,15 @@ def seed_database(db: Session):
     # 1. Seed Default Operator Account
     operator_user = db.query(User).filter(User.username == "operator").first()
     if not operator_user:
+        op_password = os.environ.get("OPERATOR_PASSWORD", "operator123")
         new_op = User(
             username="operator",
-            hashed_password=hash_password("operator123"),
+            hashed_password=hash_password(op_password),
             role="operator"
         )
         db.add(new_op)
         db.commit()
-        print("[SEED] Created operator account (username: operator / password: operator123)")
+        print("[SEED] Created operator account (username: operator)")
 
     # 2. Seed Emergency Response Teams around Dehradun, Uttarakhand
     # Coordinates centered around Dehradun valley (~30.3165 N, 78.0322 E)
