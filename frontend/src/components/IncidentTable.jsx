@@ -39,14 +39,14 @@ export default function IncidentTable({
   };
 
   return (
-    <div className="bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl overflow-hidden shadow-soft">
+    <div className="bg-[#242321] border border-[#594538]/80 rounded-xl overflow-hidden shadow-card">
       {/* Table Header Controls */}
-      <div className="p-4 border-b border-[#E8E2D9] bg-[#FAF7F2]/50 flex flex-wrap items-center justify-between gap-3">
+      <div className="p-4 border-b border-[#594538]/70 bg-[#191817] flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-sm text-[#1F3A4D]">
+          <span className="font-bold text-sm text-[#F0E6D8]">
             Incidents Queue
           </span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200/70 text-gray-700 font-semibold">
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#594538] text-[#F0E6D8] font-semibold">
             {incidents.length}
           </span>
         </div>
@@ -54,12 +54,12 @@ export default function IncidentTable({
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <div className="flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-gray-500" />
-            <span className="text-gray-500 font-medium">Status:</span>
+            <Filter className="w-3.5 h-3.5 text-[#C47A35]" />
+            <span className="text-[#B5A493] font-medium">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-[#E8E2D9] bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#A9CCE3]"
+              className="rounded-lg border border-[#594538] bg-[#242321] px-2 py-1 text-xs text-[#F0E6D8] focus:outline-none focus:border-[#C47A35]"
             >
               <option value="All">All Statuses</option>
               <option value="Reported">Reported</option>
@@ -71,11 +71,11 @@ export default function IncidentTable({
           </div>
 
           <div className="flex items-center gap-1.5 ml-2">
-            <span className="text-gray-500 font-medium">Priority:</span>
+            <span className="text-[#B5A493] font-medium">Priority:</span>
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="rounded-lg border border-[#E8E2D9] bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#A9CCE3]"
+              className="rounded-lg border border-[#594538] bg-[#242321] px-2 py-1 text-xs text-[#F0E6D8] focus:outline-none focus:border-[#C47A35]"
             >
               <option value="All">All Priorities</option>
               <option value="Critical">Critical (&gt;=60)</option>
@@ -89,38 +89,38 @@ export default function IncidentTable({
 
       {/* Table Listing */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-gray-600">
-          <thead className="bg-[#FAF7F2] text-[#1F3A4D] font-semibold border-b border-[#E8E2D9]">
+        <table className="w-full text-left text-xs text-[#B5A493]">
+          <thead className="bg-[#1C1B1A] text-[#B5A493] font-semibold border-b border-[#594538]/70">
             <tr>
               <th className="py-2.5 px-3">Tracking ID</th>
               <th className="py-2.5 px-3">Type</th>
               <th
                 onClick={() => toggleSort('priority_score')}
-                className="py-2.5 px-3 cursor-pointer hover:bg-black/5 select-none"
+                className="py-2.5 px-3 cursor-pointer hover:bg-white/5 select-none"
               >
                 <div className="flex items-center gap-1">
                   <span>Priority</span>
-                  <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                  <ArrowUpDown className="w-3 h-3 text-[#B5A493]" />
                 </div>
               </th>
               <th className="py-2.5 px-3">Status</th>
               <th className="py-2.5 px-3">Assigned Responders</th>
               <th
                 onClick={() => toggleSort('created_at')}
-                className="py-2.5 px-3 cursor-pointer hover:bg-black/5 select-none"
+                className="py-2.5 px-3 cursor-pointer hover:bg-white/5 select-none"
               >
                 <div className="flex items-center gap-1">
                   <span>Reported At</span>
-                  <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                  <ArrowUpDown className="w-3 h-3 text-[#B5A493]" />
                 </div>
               </th>
               <th className="py-2.5 px-3 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E8E2D9]">
+          <tbody className="divide-y divide-[#594538]/30">
             {sortedIncidents.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-gray-400 italic">
+                <td colSpan={7} className="py-8 text-center text-[#B5A493]/60 italic">
                   No incidents matching the active filter criteria.
                 </td>
               </tr>
@@ -133,14 +133,14 @@ export default function IncidentTable({
                     onClick={() => onSelectIncident(incident)}
                     className={`cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-[#A9CCE3]/20 font-medium'
-                        : 'hover:bg-[#FAF7F2]/80'
+                        ? 'bg-[#3D2517]/50 border-l-4 border-l-[#C47A35] font-medium'
+                        : 'hover:bg-[#2A2826]'
                     }`}
                   >
-                    <td className="py-3 px-3 font-semibold text-[#1F3A4D]">
+                    <td className="py-3 px-3 font-bold font-mono text-[#C47A35]">
                       {incident.tracking_id}
                     </td>
-                    <td className="py-3 px-3 font-medium text-gray-800">
+                    <td className="py-3 px-3 font-medium text-[#F0E6D8]">
                       {incident.type}
                     </td>
                     <td className="py-3 px-3">
@@ -151,16 +151,16 @@ export default function IncidentTable({
                     </td>
                     <td className="py-3 px-3">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium ${
+                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium border ${
                           incident.status === 'Resolved'
-                            ? 'bg-[#B8D8C4]/50 text-[#234A35]'
+                            ? 'bg-[#233327] text-[#9CD4A8] border-[#3B5942]'
                             : incident.status === 'In Progress'
-                            ? 'bg-[#A9CCE3]/50 text-[#1F3A4D]'
+                            ? 'bg-[#3D2517] text-[#F5A962] border-[#7A4526]'
                             : incident.status === 'Assigned'
-                            ? 'bg-blue-50 text-blue-700'
+                            ? 'bg-[#2E241E] text-[#E6A265] border-[#594538]'
                             : incident.status === 'Rejected'
-                            ? 'bg-red-50 text-red-700'
-                            : 'bg-amber-50 text-amber-800'
+                            ? 'bg-[#42201D] text-[#FFA494] border-[#73352E]'
+                            : 'bg-[#382D1D] text-[#EBC57A] border-[#6E542C]'
                         }`}
                       >
                         {incident.status}
@@ -172,17 +172,17 @@ export default function IncidentTable({
                           {incident.assigned_resources.map((r, i) => (
                             <span
                               key={i}
-                              className="text-[10px] px-1.5 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-200"
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-[#191817] text-[#F0E6D8] border border-[#594538]"
                             >
                               {r.name}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-400 italic text-[11px]">Unassigned</span>
+                        <span className="text-[#B5A493]/60 italic text-[11px]">Unassigned</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-gray-500 whitespace-nowrap">
+                    <td className="py-3 px-3 text-[#B5A493] whitespace-nowrap font-mono text-[11px]">
                       {new Date(incident.created_at).toLocaleString([], {
                         month: 'short',
                         day: 'numeric',
@@ -196,9 +196,9 @@ export default function IncidentTable({
                           e.stopPropagation();
                           onSelectIncident(incident);
                         }}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1F3A4D] hover:text-sky-700 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#F0E6D8] hover:text-[#C47A35] bg-[#191817] hover:bg-[#594538]/50 border border-[#594538] px-2.5 py-1 rounded-lg transition-colors"
                       >
-                        <Eye className="w-3 h-3" />
+                        <Eye className="w-3 h-3 text-[#C47A35]" />
                         Inspect
                       </button>
                     </td>

@@ -24,26 +24,26 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-30 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#E8E2D9]">
+    <header className="sticky top-0 z-30 bg-[#242321]/95 backdrop-blur-md border-b border-[#594538]/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo / Brand */}
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-[#A9CCE3] flex items-center justify-center text-[#1F3A4D] font-bold shadow-sm">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-lg bg-[#C47A35] flex items-center justify-center text-[#191817] font-bold shadow-md transition-transform group-hover:scale-105">
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold text-base tracking-tight text-[#1F3A4D] block leading-tight">
+              <span className="font-bold text-base tracking-tight text-[#F0E6D8] block leading-tight">
                 CrisisResponse Dehradun
               </span>
-              <span className="text-[11px] text-gray-500 font-medium">
+              <span className="text-[11px] text-[#B5A493] font-medium">
                 Emergency & Flood Management
               </span>
             </div>
           </Link>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1.5">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.path;
@@ -51,10 +51,10 @@ export default function Navbar() {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-[#A9CCE3]/35 text-[#1F3A4D] font-semibold'
-                      : 'text-gray-600 hover:text-[#1F3A4D] hover:bg-gray-100/70'
+                      ? 'bg-[#C47A35]/20 text-[#C47A35] border border-[#C47A35]/40 font-semibold shadow-sm'
+                      : 'text-[#B5A493] hover:text-[#F0E6D8] hover:bg-[#594538]/35 border border-transparent'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -68,13 +68,13 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             {token ? (
               <div className="flex items-center gap-3">
-                <span className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-[#B8D8C4]/40 text-[#234A35] border border-[#B8D8C4]">
-                  <User className="w-3.5 h-3.5" />
+                <span className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-[#594538]/50 text-[#F0E6D8] border border-[#594538]">
+                  <User className="w-3.5 h-3.5 text-[#C47A35]" />
                   {user?.username || 'Operator'}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 hover:text-red-700 hover:bg-red-50 border border-[#E8E2D9] transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#B5A493] hover:text-[#FFA494] hover:bg-[#42201D]/40 border border-[#594538]/60 transition-colors"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   Logout
@@ -83,7 +83,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/operator/login"
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#A9CCE3] hover:bg-[#8FBBD9] text-[#1F3A4D] transition-colors shadow-soft"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#C47A35] hover:bg-[#D48944] text-[#191817] transition-all shadow-md hover:shadow-amber"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 Operator Portal
@@ -94,7 +94,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile nav bar */}
-      <div className="flex md:hidden border-t border-[#E8E2D9] bg-[#FAF7F2] px-2 py-1 justify-around text-xs">
+      <div className="flex md:hidden border-t border-[#594538]/60 bg-[#242321] px-2 py-1 justify-around text-xs">
         {navLinks.map((link) => {
           const Icon = link.icon;
           const isActive = location.pathname === link.path;
@@ -102,8 +102,8 @@ export default function Navbar() {
             <Link
               key={link.path}
               to={link.path}
-              className={`flex flex-col items-center py-1 px-2 rounded ${
-                isActive ? 'text-[#1F3A4D] font-bold' : 'text-gray-500'
+              className={`flex flex-col items-center py-1.5 px-2 rounded-md transition-colors ${
+                isActive ? 'text-[#C47A35] font-bold bg-[#C47A35]/15' : 'text-[#B5A493]'
               }`}
             >
               <Icon className="w-4 h-4" />

@@ -10,7 +10,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-[#FAF7F2] text-[#1F3A4D] flex flex-col font-sans">
+      <div className="min-h-screen bg-[#191817] text-[#F0E6D8] flex flex-col font-sans selection:bg-[#C47A35] selection:text-[#191817]">
         <Navbar />
         <main className="flex-1">
           <Routes>
@@ -29,10 +29,10 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
-        <footer className="border-t border-[#E8E2D9] bg-[#FFFFFF] py-4 text-center text-xs text-gray-500">
+        <footer className="border-t border-[#594538]/50 bg-[#242321] py-4 text-center text-xs text-[#B5A493]">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span>&copy; {new Date().getFullYear()} Flood & Emergency Incident Reporting System &bull; Dehradun District</span>
-            <span className="text-[11px] text-gray-400">College Mini-Project &bull; Leaflet &bull; FastAPI &bull; SQLite</span>
+            <span className="text-[11px] text-[#B5A493]/70">College Mini-Project &bull; Leaflet &bull; FastAPI &bull; SQLite</span>
           </div>
         </footer>
       </div>

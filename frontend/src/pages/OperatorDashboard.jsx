@@ -161,20 +161,20 @@ export default function OperatorDashboard() {
       {/* Top Bar: Title & Live Polling Status */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1F3A4D] tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#F0E6D8] tracking-tight">
             Dehradun Emergency Command Dashboard
           </h1>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-[#B5A493] mt-0.5">
             Real-time incident dispatch, GIS hazard tracking, and response allocation.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Live Polling Indicator */}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E8E2D9] text-xs shadow-card">
-            <Radio className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-            <span className="text-gray-600 font-medium">Live (10s poll)</span>
-            <span className="text-[10px] text-gray-400 border-l pl-2 ml-1">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#242321] border border-[#594538] text-xs shadow-card">
+            <Radio className="w-3.5 h-3.5 text-[#C47A35] animate-pulse" />
+            <span className="text-[#B5A493] font-medium">Live (10s poll)</span>
+            <span className="text-[10px] text-[#B5A493]/70 border-l border-[#594538] pl-2 ml-1">
               {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           </div>
@@ -182,10 +182,10 @@ export default function OperatorDashboard() {
           <button
             onClick={() => fetchData(false)}
             disabled={isRefreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-gray-50 text-[#1F3A4D] border border-[#E8E2D9] shadow-card transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#242321] hover:bg-[#2A2826] text-[#F0E6D8] border border-[#594538] hover:border-[#C47A35] shadow-card transition-colors disabled:opacity-50"
             title="Manual refresh"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-[#C47A35] ${isRefreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
         </div>
@@ -215,11 +215,11 @@ export default function OperatorDashboard() {
           {/* Map View */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#1F3A4D] flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-sky-700" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[#F0E6D8] flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#C47A35]" />
                 Live Incident Map & Deployed Response Units
               </span>
-              <span className="text-[11px] text-gray-500 font-medium">
+              <span className="text-[11px] text-[#B5A493] font-medium">
                 Dehradun, Uttarakhand
               </span>
             </div>

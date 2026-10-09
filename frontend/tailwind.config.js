@@ -7,41 +7,55 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#FAF7F2',
-        border: '#E8E2D9',
-        surface: '#FFFFFF',
-        primary: {
-          DEFAULT: '#A9CCE3',
-          hover: '#8FBBD9',
-          dark: '#1F3A4D',
+        charcoal: {
+          DEFAULT: '#242321', // Primary dark backgrounds and navigation
+          dark: '#191817',    // Deep Charcoal - page backgrounds
+          light: '#2E2C2A',
+          surface: '#242321',
         },
-        secondary: {
-          DEFAULT: '#B8D8C4',
-          hover: '#A4CBB2',
-          dark: '#234A35',
+        earth: {
+          DEFAULT: '#594538', // Secondary surfaces, cards, and subtle borders
+          dark: '#3E3128',
+          light: '#735B4B',
+          border: '#594538',
         },
-        accent: {
-          DEFAULT: '#F2C6CF',
-          hover: '#E9AFC0',
-          dark: '#6B2B3A',
+        amber: {
+          DEFAULT: '#C47A35', // Burnt Amber - primary accent, buttons, active states
+          hover: '#D48944',
+          dark: '#A36024',
+          light: '#E6A265',
+        },
+        cream: {
+          DEFAULT: '#F0E6D8', // Warm Cream - primary text on dark backgrounds
+          muted: '#E2D5C3',
+        },
+        taupe: {
+          DEFAULT: '#B5A493', // Muted Taupe - secondary text and supporting labels
+          light: '#C8BAAB',
+          dark: '#8E7D6E',
         },
         priority: {
-          critical: '#F8D7DA',
-          criticalDark: '#842029',
-          high: '#FCE4D6',
-          highDark: '#A65319',
-          medium: '#FFF2CD',
-          mediumDark: '#7A6400',
-          low: '#D1E7DD',
-          lowDark: '#0F5132',
+          critical: '#42201D',
+          criticalText: '#FFA494',
+          criticalBorder: '#73352E',
+          high: '#3D2517',
+          highText: '#F5A962',
+          highBorder: '#7A4526',
+          medium: '#382D1D',
+          mediumText: '#EBC57A',
+          mediumBorder: '#6E542C',
+          low: '#233327',
+          lowText: '#9CD4A8',
+          lowBorder: '#3B5942',
         }
       },
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        soft: '0 2px 8px -2px rgba(31, 58, 77, 0.05)',
-        card: '0 1px 3px 0 rgba(0, 0, 0, 0.03)',
+        soft: '0 4px 20px -2px rgba(0, 0, 0, 0.45)',
+        card: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
+        amber: '0 0 16px rgba(196, 122, 53, 0.25)',
       }
     },
   },

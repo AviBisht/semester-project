@@ -139,39 +139,39 @@ export default function ReportIncidentPage() {
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Title & Guidance Header */}
       <div className="text-center max-w-2xl mx-auto mb-8">
-        <span className="text-xs uppercase tracking-widest font-bold text-gray-500 bg-[#E8E2D9]/60 px-3 py-1 rounded-full inline-block mb-2">
+        <span className="text-xs uppercase tracking-widest font-bold text-[#C47A35] bg-[#594538]/30 border border-[#594538]/60 px-3 py-1 rounded-full inline-block mb-2">
           Public Emergency Reporting
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1F3A4D]">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F0E6D8]">
           Report a Flood or Emergency Incident
         </h1>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-sm text-[#B5A493] mt-2">
           Submit flood levels, hazard zones, or urgent rescue requirements. No citizen login required. Our dispatch operators triage reports immediately by priority score.
         </p>
       </div>
 
       {/* Confirmation Modal / Screen */}
       {submittedReport ? (
-        <div className="bg-[#FFFFFF] border border-[#B8D8C4] rounded-2xl p-6 sm:p-8 shadow-soft text-center animate-fade-in">
-          <div className="w-14 h-14 bg-[#B8D8C4] text-[#234A35] rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-[#242321] border border-[#594538] rounded-2xl p-6 sm:p-8 shadow-card text-center animate-fade-in">
+          <div className="w-14 h-14 bg-[#C47A35]/20 border border-[#C47A35]/40 text-[#C47A35] rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8" />
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-[#1F3A4D]">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#F0E6D8]">
             Emergency Report Successfully Registered!
           </h2>
-          <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+          <p className="text-sm text-[#B5A493] mt-2 max-w-md mx-auto">
             Your incident has been dispatched to Dehradun municipal emergency responders. Please save your Tracking ID below to track real-time updates.
           </p>
 
-          <div className="my-6 p-4 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9] inline-block max-w-xs w-full">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">
+          <div className="my-6 p-4 rounded-xl bg-[#191817] border border-[#594538] inline-block max-w-xs w-full">
+            <span className="text-xs font-semibold text-[#B5A493] uppercase tracking-wider block">
               Your Tracking ID
             </span>
-            <span className="text-2xl sm:text-3xl font-mono font-bold text-[#1F3A4D] block mt-1">
+            <span className="text-2xl sm:text-3xl font-mono font-bold text-[#C47A35] block mt-1">
               {submittedReport.tracking_id}
             </span>
-            <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mt-2 inline-block">
+            <span className="text-[11px] font-medium text-[#F5A962] bg-[#3D2517] px-2 py-0.5 rounded border border-[#C47A35]/40 mt-2 inline-block">
               Priority Tier: {submittedReport.priority_level} ({submittedReport.priority_score} pts)
             </span>
           </div>
@@ -179,7 +179,7 @@ export default function ReportIncidentPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               to={`/track?id=${submittedReport.tracking_id}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold bg-[#A9CCE3] hover:bg-[#8FBBD9] text-[#1F3A4D] transition-colors shadow-soft"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold bg-[#C47A35] hover:bg-[#D48944] text-[#191817] transition-colors shadow-amber"
             >
               Track My Report Now
               <ArrowRight className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function ReportIncidentPage() {
                 setPhotoFile(null);
                 setPhotoPreview(null);
               }}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium text-gray-700 hover:bg-gray-100 border border-[#E8E2D9] transition-colors"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium text-[#F0E6D8] hover:bg-[#594538]/40 border border-[#594538] transition-colors"
             >
               Submit Another Report
             </button>
@@ -200,9 +200,9 @@ export default function ReportIncidentPage() {
         </div>
       ) : (
         /* Report Form Card */
-        <div className="bg-[#FFFFFF] border border-[#E8E2D9] rounded-2xl p-6 sm:p-8 shadow-soft">
+        <div className="bg-[#242321] border border-[#594538] rounded-2xl p-6 sm:p-8 shadow-card">
           {errorMessage && (
-            <div className="p-3 mb-6 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+            <div className="p-3 mb-6 rounded-lg bg-[#42201D] border border-[#FFA494]/40 text-[#FFA494] text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
@@ -211,8 +211,8 @@ export default function ReportIncidentPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 1. Incident Type */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#1F3A4D] mb-2">
-                1. Incident Category <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-2">
+                1. Incident Category <span className="text-[#C47A35]">*</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {INCIDENT_TYPES.map((type) => {
@@ -222,14 +222,15 @@ export default function ReportIncidentPage() {
                       type="button"
                       key={type}
                       onClick={() => setIncidentType(type)}
-                      className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all ${isSelected
-                          ? 'border-[#1F3A4D] bg-[#A9CCE3]/30 text-[#1F3A4D]'
-                          : 'border-[#E8E2D9] bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
+                      className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all ${
+                        isSelected
+                          ? 'border-[#C47A35] bg-[#C47A35]/20 text-[#C47A35]'
+                          : 'border-[#594538]/70 bg-[#191817] text-[#B5A493] hover:border-[#594538] hover:text-[#F0E6D8] hover:bg-[#2A2826]'
+                      }`}
                     >
                       <div className="flex items-center justify-between">
                         <span>{type}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#1F3A4D]" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#C47A35]" />}
                       </div>
                     </button>
                   );
@@ -239,8 +240,8 @@ export default function ReportIncidentPage() {
 
             {/* 2. Description */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#1F3A4D] mb-1.5">
-                2. Situation Description <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
+                2. Situation Description <span className="text-[#C47A35]">*</span>
               </label>
               <textarea
                 required
@@ -248,33 +249,33 @@ export default function ReportIncidentPage() {
                 placeholder="Describe current water levels, trapped residents, hazards, or landmark references..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full text-xs sm:text-sm rounded-xl border border-[#E8E2D9] p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#A9CCE3] transition-all"
+                className="w-full text-xs sm:text-sm rounded-xl border border-[#594538] p-3 bg-[#191817] text-[#F0E6D8] placeholder-[#B5A493]/50 focus:outline-none focus:border-[#C47A35] focus:ring-1 focus:ring-[#C47A35] transition-all"
               />
             </div>
 
             {/* 3. Location Picker (Map Click + "Use my location" button) */}
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#1F3A4D]">
-                  3. Incident Location <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8]">
+                  3. Incident Location <span className="text-[#C47A35]">*</span>
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-gray-500 font-mono">
+                  <span className="text-[11px] text-[#B5A493] font-mono">
                     {latitude.toFixed(4)}, {longitude.toFixed(4)}
                   </span>
                   <button
                     type="button"
                     onClick={handleUseMyLocation}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#FAF7F2] hover:bg-[#E8E2D9] text-[#1F3A4D] border border-[#E8E2D9] transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#191817] hover:bg-[#594538]/40 text-[#F0E6D8] border border-[#594538] transition-colors"
                   >
-                    <Navigation className="w-3 h-3 text-sky-700" />
+                    <Navigation className="w-3 h-3 text-[#C47A35]" />
                     Use My Location
                   </button>
                 </div>
               </div>
 
-              <div className="text-[11px] text-gray-500 mb-2 flex items-center gap-1.5">
-                <Info className="w-3 h-3 text-[#1F3A4D]" />
+              <div className="text-[11px] text-[#B5A493] mb-2 flex items-center gap-1.5">
+                <Info className="w-3 h-3 text-[#C47A35]" />
                 <span>Click anywhere on the map to accurately drop a pinpoint at the incident site.</span>
               </div>
 
@@ -292,52 +293,54 @@ export default function ReportIncidentPage() {
             {/* 4. Impact metrics: People Affected & Vulnerable Groups */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#1F3A4D] mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
                   4. Estimated People Affected
                 </label>
                 <div className="relative">
-                  <Users className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                  <Users className="w-4 h-4 text-[#B5A493] absolute left-3 top-3" />
                   <input
                     type="number"
                     min={0}
                     max={500}
                     value={peopleAffected}
                     onChange={(e) => setPeopleAffected(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full text-sm rounded-xl border border-[#E8E2D9] pl-9 pr-3 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#A9CCE3]"
+                    className="w-full text-sm rounded-xl border border-[#594538] bg-[#191817] pl-9 pr-3 py-2.5 text-[#F0E6D8] focus:outline-none focus:border-[#C47A35] focus:ring-1 focus:ring-[#C47A35]"
                   />
                 </div>
-                <span className="text-[11px] text-gray-500 mt-1 block">
+                <span className="text-[11px] text-[#B5A493] mt-1 block">
                   Scoring adds 1 point per person (capped at +20).
                 </span>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#1F3A4D] mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
                   5. Vulnerable Groups Involved?
                 </label>
                 <div className="flex gap-2 mt-1">
                   <button
                     type="button"
                     onClick={() => setVulnerableInvolved(true)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${vulnerableInvolved
-                        ? 'bg-[#F2C6CF]/50 border-[#6B2B3A] text-[#6B2B3A]'
-                        : 'border-[#E8E2D9] bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
+                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                      vulnerableInvolved
+                        ? 'bg-[#3D2517] border-[#C47A35] text-[#F0E6D8]'
+                        : 'border-[#594538]/70 bg-[#191817] text-[#B5A493] hover:bg-[#2A2826] hover:text-[#F0E6D8]'
+                    }`}
                   >
                     Yes (Elderly / Children / Disabled)
                   </button>
                   <button
                     type="button"
                     onClick={() => setVulnerableInvolved(false)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${!vulnerableInvolved
-                        ? 'bg-[#FAF7F2] border-[#1F3A4D] text-[#1F3A4D]'
-                        : 'border-[#E8E2D9] bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
+                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                      !vulnerableInvolved
+                        ? 'bg-[#594538]/40 border-[#C47A35] text-[#F0E6D8]'
+                        : 'border-[#594538]/70 bg-[#191817] text-[#B5A493] hover:bg-[#2A2826] hover:text-[#F0E6D8]'
+                    }`}
                   >
                     No
                   </button>
                 </div>
-                <span className="text-[11px] text-gray-500 mt-1 block">
+                <span className="text-[11px] text-[#B5A493] mt-1 block">
                   Assigns +15 priority points if vulnerable individuals are at risk.
                 </span>
               </div>
@@ -345,7 +348,7 @@ export default function ReportIncidentPage() {
 
             {/* 6. Severity rating 1-5 */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#1F3A4D] mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
                 6. Situation Severity Scale (1 - 5)
               </label>
               <div className="grid grid-cols-5 gap-2">
@@ -356,13 +359,14 @@ export default function ReportIncidentPage() {
                       type="button"
                       key={level}
                       onClick={() => setSeverity(level)}
-                      className={`py-3 rounded-xl border text-center transition-all ${isSelected
-                          ? 'border-[#1F3A4D] bg-[#A9CCE3] text-[#1F3A4D] font-bold shadow-sm'
-                          : 'border-[#E8E2D9] bg-white text-gray-700 hover:bg-gray-50 font-medium'
-                        }`}
+                      className={`py-3 rounded-xl border text-center transition-all ${
+                        isSelected
+                          ? 'border-[#C47A35] bg-[#C47A35] text-[#191817] font-bold shadow-amber'
+                          : 'border-[#594538]/70 bg-[#191817] text-[#B5A493] hover:bg-[#2A2826] hover:text-[#F0E6D8] font-medium'
+                      }`}
                     >
                       <span className="text-base block">{level}</span>
-                      <span className="text-[10px] text-gray-600 block mt-0.5">
+                      <span className={`text-[10px] block mt-0.5 ${isSelected ? 'text-[#191817]' : 'text-[#B5A493]'}`}>
                         {level === 1 ? 'Minor' : level === 3 ? 'Moderate' : level === 5 ? 'Severe' : ''}
                       </span>
                     </button>
@@ -373,12 +377,12 @@ export default function ReportIncidentPage() {
 
             {/* 7. Optional Photo Upload */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#1F3A4D] mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
                 7. Photo Attachment (Optional)
               </label>
               <div className="flex items-center gap-4">
-                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#FAF7F2] hover:bg-[#E8E2D9] border border-[#E8E2D9] text-[#1F3A4D] transition-colors">
-                  <Camera className="w-4 h-4 text-gray-600" />
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#191817] hover:bg-[#594538]/40 border border-[#594538] text-[#F0E6D8] transition-colors">
+                  <Camera className="w-4 h-4 text-[#C47A35]" />
                   <span>Choose Photo File</span>
                   <input
                     type="file"
@@ -388,7 +392,7 @@ export default function ReportIncidentPage() {
                   />
                 </label>
                 {photoFile && (
-                  <span className="text-xs text-gray-600 font-medium truncate max-w-xs">
+                  <span className="text-xs text-[#B5A493] font-medium truncate max-w-xs">
                     {photoFile.name}
                   </span>
                 )}
@@ -399,7 +403,7 @@ export default function ReportIncidentPage() {
                   <img
                     src={photoPreview}
                     alt="Selected preview"
-                    className="w-32 h-24 object-cover rounded-lg border border-[#E8E2D9]"
+                    className="w-32 h-24 object-cover rounded-lg border border-[#594538]"
                   />
                   <button
                     type="button"
@@ -416,11 +420,11 @@ export default function ReportIncidentPage() {
             </div>
 
             {/* Submit Button */}
-            <div className="pt-2 border-t border-[#E8E2D9]">
+            <div className="pt-2 border-t border-[#594538]">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-[#A9CCE3] hover:bg-[#8FBBD9] text-[#1F3A4D] transition-all shadow-soft flex items-center justify-center gap-2 disabled:opacity-60"
+                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-[#C47A35] hover:bg-[#D48944] text-[#191817] transition-all shadow-amber flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 {isSubmitting ? (
                   <span>Registering Incident...</span>
