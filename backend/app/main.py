@@ -1,14 +1,16 @@
 import os
 import uuid
 import json
-import shutil
+import time
+from collections import defaultdict
 from typing import Optional, List
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Query
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timezone
+from PIL import Image, UnidentifiedImageError
 
 from .database import engine, Base, get_db
 from .models import User, Incident, Resource, Assignment, IncidentUpdate
@@ -41,10 +43,101 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for Vite frontend
+# ----------------------------------------------------
+# SECURITY HEADERS & APPLICATION HARDENING
+# ----------------------------------------------------
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Inject defensive HTTP security headers into every response."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(self), camera=(), microphone=()"
+    return response
+
+
+# In-memory sliding-window rate limiter per client IP.
+# Suitable for a small demo; production deployments should use
+# a shared rate limiter such as Redis and a trusted proxy configuration.
+_rate_limit_records = defaultdict(list)
+_rate_limit_request_count = 0
+MAX_RATE_LIMIT_BUCKETS = 10_000
+
+
+def check_rate_limit(
+    request: Request,
+    limit: int = 20,
+    window_seconds: int = 60,
+    key_prefix: str = "",
+):
+    global _rate_limit_request_count
+
+    client_ip = request.client.host if request.client else "unknown"
+    bucket_key= f"{key_prefix}:{client_ip}"
+    now = time.monotonic()
+    cutoff = now - window_seconds
+
+    # Periodically remove expired buckets, including inactive clients.
+    _rate_limit_request_count += 1
+    if _rate_limit_request_count >= 100:
+        expired_keys = [
+            key
+            for key, timestamps in _rate_limit_records.items()
+            if not timestamps or timestamps[-1] <= cutoff
+        ]
+        for key in expired_keys:
+            del _rate_limit_records[key]
+        _rate_limit_request_count = 0
+
+    # Avoid unbounded growth from many distinct client addresses.
+    if bucket_key not in _rate_limit_records:
+        if len(_rate_limit_records) >= MAX_RATE_LIMIT_BUCKETS:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Rate limiter is temporarily busy. Please try again later.",
+            )
+        _rate_limit_records[bucket_key] = []
+
+    timestamps = [
+        timestamp
+        for timestamp in _rate_limit_records[bucket_key]
+        if timestamp > cutoff
+    ]
+    if len(timestamps) >= limit:
+        _rate_limit_records[bucket_key] = timestamps
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests. Please slow down and try again later.",
+        )
+    timestamps.append(now)
+    _rate_limit_records[bucket_key] = timestamps
+
+
+# Configure CORS using explicitly allowed frontend origins
+allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "").strip()
+
+if not allowed_origins_env:
+    if os.environ.get("ENV", "development").lower() == "production":
+        raise RuntimeError(
+            "ALLOWED_ORIGINS must be configured in production."
+        )
+    origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+else:
+    origins = [
+        origin.strip().rstrip("/")
+        for origin in allowed_origins_env.split(",")
+        if origin.strip()
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -67,8 +160,9 @@ def on_startup():
 # ----------------------------------------------------
 
 @app.post("/api/auth/login", response_model=TokenResponse)
-def login(creds: LoginRequest, db: Session = Depends(get_db)):
+def login(creds: LoginRequest, request: Request, db: Session = Depends(get_db)):
     """Operator login with username & hashed password verification, returns JWT."""
+    check_rate_limit(request, limit=5, window_seconds=60, key_prefix="login")
     user = db.query(User).filter(User.username == creds.username).first()
     if not user or not verify_password(creds.password, user.hashed_password):
         raise HTTPException(
@@ -92,25 +186,141 @@ def get_me(current_user: User = Depends(get_current_user)):
 # 2. CITIZEN PUBLIC ENDPOINTS (No Login Required)
 # ----------------------------------------------------
 
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
+
 @app.post("/api/incidents/upload-photo")
-async def upload_incident_photo(file: UploadFile = File(...)):
-    """Endpoint for citizens to optionally upload an incident photo."""
-    # Sanitize and create unique filename
-    ext = os.path.splitext(file.filename)[1] or ".jpg"
+async def upload_incident_photo(request: Request, file: UploadFile = File(...)):
+    """Endpoint for citizens to optionally upload an incident photo with strict size & extension validation."""
+    check_rate_limit(request, limit=10, window_seconds=60, key_prefix="upload")
+
+    filename = file.filename or ""
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only JPG, PNG or WEBP images are allowed."
+        )
+
+    if file.content_type and file.content_type.lower() not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid image MIME type. Only JPG, PNG, or WEBP allowed."
+        )
+
     unique_filename = f"{uuid.uuid4().hex[:10]}{ext}"
     destination = os.path.join(UPLOAD_DIR, unique_filename)
 
-    with open(destination, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    total_size = 0
+    try:
+        with open(destination, "wb") as buffer:
+            while chunk := await file.read(1024 * 64):
+                total_size += len(chunk)
+                if total_size > MAX_IMAGE_SIZE_BYTES:
+                    buffer.close()
+                    if os.path.exists(destination):
+                        try:
+                            os.remove(destination)
+                        except OSError:
+                            pass
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail="Photo must be under 5 MB."
+                    )
+                buffer.write(chunk)
+    except HTTPException:
+        if os.path.exists(destination):
+            try:
+                os.remove(destination)
+            except OSError:
+                pass
+        raise
+    except Exception:
+        if os.path.exists(destination):
+            try:
+                os.remove(destination)
+            except OSError:
+                pass
+        raise HTTPException(status_code=500, detail="Failed to save image file.")
+
+    # Verify the actual image content, not just its extension or MIME type.
+    expected_formats = {
+        ".jpg": "JPEG",
+        ".jpeg": "JPEG",
+        ".png": "PNG",
+        ".webp": "WEBP",
+    }
+    cleaned_destination = destination + ".clean"
+
+    try:
+        with Image.open(destination) as image:
+            if image.format != expected_formats[ext]:
+                raise ValueError("Image content does not match its file extension.")
+
+            # Reject excessively large images to limit decompression-bomb risk.
+            if image.width * image.height > 20_000_000:
+                raise ValueError("Image dimensions are too large.")
+
+            image.verify()
+
+        # Reopen, fully decode, and re-encode the verified image.
+        with Image.open(destination) as image:
+            image.load()
+            output_format = expected_formats[ext]
+
+            if output_format == "JPEG":
+                image = image.convert("RGB")
+            elif output_format == "PNG":
+                image = image.convert(
+                    "RGBA" if "A" in image.getbands() else "RGB"
+                )
+            else:  # WEBP
+                image = image.convert(
+                    "RGBA" if "A" in image.getbands() else "RGB"
+                )
+
+            image.save(cleaned_destination, format=output_format)
+
+        if os.path.getsize(cleaned_destination) > MAX_IMAGE_SIZE_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="Processed photo exceeds the 5 MB limit."
+            )
+
+        os.replace(cleaned_destination, destination)
+
+    except HTTPException:
+        for path in (destination, cleaned_destination):
+            if os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+        raise
+    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
+        for path in (destination, cleaned_destination):
+            if os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or unsupported image. Please upload a valid JPG, PNG, or WEBP."
+        )
 
     return {"photo_url": f"/uploads/{unique_filename}"}
 
 @app.post("/api/incidents")
-def report_incident(data: IncidentCreate, db: Session = Depends(get_db)):
+def report_incident(data: IncidentCreate, request: Request, db: Session = Depends(get_db)):
     """
     Public reporting endpoint: Citizen submits incident without authentication.
     Computes priority score, assigns a tracking ID, and saves to database.
+    Rate limited to prevent denial-of-service spam.
     """
+    check_rate_limit(request, limit=15, window_seconds=60, key_prefix="report")
+
     # 1. Compute priority score and breakdown using exact project formula
     score, level, breakdown = calculate_priority_score(
         severity=data.severity,
@@ -167,16 +377,14 @@ def report_incident(data: IncidentCreate, db: Session = Depends(get_db)):
 def track_incident(identifier: str, db: Session = Depends(get_db)):
     """
     Public tracking endpoint: Citizens can look up status and timeline
-    by entering their Tracking ID (e.g. INC-8392) or numeric ID.
+    by entering their Tracking ID (e.g. INC-8392).
+    Disallows sequential numeric ID enumeration to protect citizen privacy.
     """
-    incident = None
-    if identifier.startswith("INC-") or identifier.startswith("inc-"):
-        incident = db.query(Incident).filter(Incident.tracking_id.ilike(identifier)).first()
-    elif identifier.isdigit():
-        incident = db.query(Incident).filter(Incident.id == int(identifier)).first()
-    else:
-        incident = db.query(Incident).filter(Incident.tracking_id.ilike(identifier)).first()
+    cleaned = identifier.strip()
+    if not cleaned:
+        raise HTTPException(status_code=400, detail="Tracking ID is required")
 
+    incident = db.query(Incident).filter(Incident.tracking_id.ilike(cleaned)).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found with the provided Tracking ID")
 
@@ -234,10 +442,11 @@ def list_incidents(
     status_filter: Optional[str] = Query(None, alias="status"),
     priority_filter: Optional[str] = Query(None, alias="priority"),
     type_filter: Optional[str] = Query(None, alias="type"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Returns incident list for the Operator dashboard.
+    Returns incident list for the Operator dashboard (Protected).
     Supports filtering by status, priority level, and incident type.
     """
     query = db.query(Incident)
@@ -282,9 +491,13 @@ def list_incidents(
     return result
 
 @app.get("/api/incidents/{incident_id}")
-def get_incident_detail(incident_id: int, db: Session = Depends(get_db)):
+def get_incident_detail(
+    incident_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Full detail for the operator incident detail panel:
+    Full detail for the operator incident detail panel (Protected):
     - Score breakdown
     - Status history timeline
     - Assigned teams
@@ -522,8 +735,12 @@ def assign_resource_to_incident(
 # ----------------------------------------------------
 
 @app.get("/api/resources", response_model=List[ResourceSchema])
-def list_resources(type_filter: Optional[str] = Query(None, alias="type"), db: Session = Depends(get_db)):
-    """List all seeded response teams and their real-time status."""
+def list_resources(
+    type_filter: Optional[str] = Query(None, alias="type"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """List all seeded response teams and their real-time status (Protected)."""
     query = db.query(Resource)
     if type_filter and type_filter != "All":
         query = query.filter(Resource.type == type_filter)
@@ -539,7 +756,10 @@ def get_weather():
     return get_weather_forecast()
 
 @app.get("/api/road-blockages")
-def get_road_blockages(db: Session = Depends(get_db)):
+def get_road_blockages(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Returns active Road Blockage incidents to render as translucent red circles
     (~300m radius) on the dashboard map.
@@ -569,7 +789,10 @@ def get_road_blockages(db: Session = Depends(get_db)):
 # ----------------------------------------------------
 
 @app.get("/api/analytics", response_model=AnalyticsResponse)
-def get_analytics(db: Session = Depends(get_db)):
+def get_analytics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Single analytics page dataset:
     - Counts of incidents by type for single bar chart

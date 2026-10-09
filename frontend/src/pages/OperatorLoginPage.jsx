@@ -70,6 +70,7 @@ export default function OperatorLoginPage() {
               <input
                 type="text"
                 required
+                autoComplete="off"
                 placeholder="Enter operator username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -87,6 +88,7 @@ export default function OperatorLoginPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
+                autoComplete="new-password"
                 placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

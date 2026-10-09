@@ -72,10 +72,22 @@ export default function ReportIncidentPage() {
     );
   };
 
-  // Handle photo file selection
+  // Handle photo file selection with client validation
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowed.includes(file.type)) {
+        setErrorMessage('Only JPG, PNG or WEBP images are allowed.');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage('Photo must be under 5 MB.');
+        e.target.value = '';
+        return;
+      }
+      setErrorMessage('');
       setPhotoFile(file);
       setPhotoPreview(URL.createObjectURL(file));
     }
@@ -370,7 +382,7 @@ export default function ReportIncidentPage() {
                   <span>Choose Photo File</span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={handlePhotoChange}
                     className="hidden"
                   />

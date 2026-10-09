@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta
+import os
+import logging
+from datetime import datetime, timedelta, timezone
 import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -7,8 +9,22 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from .models import User
 
-# JWT Config
-SECRET_KEY = "mini-project-secret-key-emergency-dehradun-2026"
+logger = logging.getLogger(__name__)
+
+# JWT Config: Load secret key from environment variable
+# JWT configuration
+ENVIRONMENT = os.environ.get("ENV", "development").lower()
+SECRET_KEY = os.environ.get("SECRET_KEY", "")
+
+if ENVIRONMENT == "production":
+    if len(SECRET_KEY) < 32:
+        raise RuntimeError(
+            "SECRET_KEY must be configured with a strong random value in production."
+        )
+elif not SECRET_KEY:
+    # Local development fallback only;
+    SECRET_KEY = "local-development-only-insecure-secret"
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
@@ -31,9 +47,9 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     """Encode payload into signed JWT token."""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

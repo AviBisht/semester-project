@@ -37,11 +37,29 @@ env/
 ENV/
 env.bak/
 venv.bak/
+# Python testing and linting artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # Environment variables & secrets
 .env
 .env.*
 !.env.example
+*.env
+
+# Databases & local persistent storage
+*.db
+*.sqlite
+*.sqlite3
+backend/emergency.db
+
+# Uploaded user files (keep directory via .gitkeep)
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/README.md
 
 # IDE & Editor settings
 .vscode/

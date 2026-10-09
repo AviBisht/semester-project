@@ -12,7 +12,13 @@ def seed_database(db: Session):
     """
     # 1. Seed / Update Operator Account
     operator_user = db.query(User).filter(User.username == "operator").first()
-    op_password = os.environ.get("OPERATOR_PASSWORD", "operator123")
+
+    op_password = os.environ.get("OPERATOR_PASSWORD", "")
+    if not op_password:
+        raise RuntimeError(
+            "OPERATOR_PASSWORD must be set before seeding the operator account."
+        )
+
     if not operator_user:
         new_op = User(
             username="operator",
