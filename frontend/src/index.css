@@ -3,99 +3,91 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  --bg-ivory: #F5F0E5;
+  --surface-ivory: #FCFAF6;
+  --sage-light: #C6CDAA;
+  --olive-deep: #697C58;
+  --terracotta-muted: #CF806B;
+  --charcoal-green: #343B30;
+}
+
+html {
+  background-color: #F5F0E5;
+  color: #343B30;
+  min-height: 100%;
 }
 
 body {
   margin: 0;
-  background-color: #191817; /* Deep Charcoal */
-  color: #F0E6D8;            /* Warm Cream */
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  padding: 0;
+  background-color: #F5F0E5;
+  color: #343B30;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* Custom leaflet map fixes for crisp rendering in dark aesthetic */
+#root {
+  background-color: #F5F0E5;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom leaflet map fixes for earthy emergency cartography */
 .leaflet-container {
   width: 100%;
   height: 100%;
   font-family: inherit;
   z-index: 10;
-  border-radius: inherit;
-  background: #191817 !important;
+  background: #E8E2D4 !important;
 }
 
-/* Tasteful dark filter for OpenStreetMap tiles */
+/* Clean, crisp cartographic rendering with natural saturation */
 .leaflet-tile {
-  filter: brightness(0.78) invert(0.92) hue-rotate(185deg) contrast(1.15) saturate(0.55);
+  filter: saturate(0.92) contrast(1.02);
 }
 
-/* Dark mode Leaflet popup styling */
+/* Popups with ivory surface, sage/stone border, and charcoal text */
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-  background: #242321 !important;
-  color: #F0E6D8 !important;
-  border: 1px solid #594538 !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6) !important;
+  background: #FCFAF6 !important;
+  color: #343B30 !important;
+  border: 1px solid #DFD8C8 !important;
+  box-shadow: 0 4px 16px rgba(52, 59, 48, 0.08) !important;
+  border-radius: 6px !important;
 }
 
 .leaflet-popup-content {
-  color: #F0E6D8 !important;
-  margin: 10px 14px !important;
-  line-height: 1.4 !important;
+  color: #343B30 !important;
+  margin: 10px 12px !important;
+  line-height: 1.45 !important;
 }
 
 .leaflet-container a.leaflet-popup-close-button {
-  color: #B5A493 !important;
+  color: #5A6354 !important;
   padding: 6px 6px 0 0 !important;
 }
 
 .leaflet-container a.leaflet-popup-close-button:hover {
-  color: #C47A35 !important;
+  color: #697C58 !important;
 }
 
-/* Custom map marker styles */
-.incident-pin {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  border: 2px solid #242321;
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-
-.incident-pin:hover {
-  transform: scale(1.15);
-}
-
-.team-pin {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  border: 2px solid #242321;
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-
-.team-pin:hover {
-  transform: scale(1.15);
-}
-
-/* Sophisticated Earthy Charcoal scrollbar */
+/* Subtle scrollbars tailored to Warm Ivory & Sage */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #191817;
+  background: #EFE9DC;
 }
 ::-webkit-scrollbar-thumb {
-  background: #594538;
-  border-radius: 3px;
+  background: #C6CDAA;
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #735B4B;
+  background: #697C58;
 }

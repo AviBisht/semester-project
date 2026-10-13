@@ -1,57 +1,56 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import IncidentMap from '../components/IncidentMap';
 import api from '../api';
 import {
-  ShieldAlert,
-  MapPin,
-  Users,
   AlertCircle,
+  Users,
   Camera,
   CheckCircle2,
   Navigation,
   ArrowRight,
-  Info,
-  Check
+  ShieldAlert,
+  Flame,
+  HeartPulse,
+  Car,
+  HelpCircle,
+  Waves,
+  PhoneCall
 } from 'lucide-react';
 
 const INCIDENT_TYPES = [
-  'Flooding/Waterlogging',
-  'Fire',
-  'Road Accident',
-  'Medical Emergency',
-  'Road Blockage',
-  'Other'
+  { name: 'Flooding/Waterlogging', icon: Waves },
+  { name: 'Fire', icon: Flame },
+  { name: 'Road Accident', icon: Car },
+  { name: 'Medical Emergency', icon: HeartPulse },
+  { name: 'Road Blockage', icon: ShieldAlert },
+  { name: 'Other', icon: HelpCircle }
 ];
 
 export default function ReportIncidentPage() {
-  const navigate = useNavigate();
-
-  // Form states
   const [incidentType, setIncidentType] = useState('Flooding/Waterlogging');
   const [description, setDescription] = useState('');
-  const [latitude, setLatitude] = useState(30.3165); // Default Dehradun center
-  const [longitude, setLongitude] = useState(78.0322);
-  const [locationName, setLocationName] = useState('Dehradun City Center (Pinned)');
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [locationName, setLocationName] = useState('');
+  const [locationError, setLocationError] = useState('');
   const [peopleAffected, setPeopleAffected] = useState(1);
   const [vulnerableInvolved, setVulnerableInvolved] = useState(false);
   const [severity, setSeverity] = useState(3);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
 
-  // Submission & Confirmation state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedReport, setSubmittedReport] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Handle location picking via map click
   const handleMapLocationSelect = (coords) => {
     setLatitude(coords.latitude);
     setLongitude(coords.longitude);
-    setLocationName(`Custom Pin (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`);
+    setLocationName(`Custom Site (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`);
+    setLocationError('');
   };
 
-  // "Use my location" button
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
       alert('Geolocation is not supported by your browser.');
@@ -63,16 +62,16 @@ export default function ReportIncidentPage() {
         const lng = Number(pos.coords.longitude.toFixed(5));
         setLatitude(lat);
         setLongitude(lng);
-        setLocationName(`Current Device Location (${lat}, ${lng})`);
+        setLocationName(`Current GPS Pin (${lat}, ${lng})`);
+        setLocationError('');
       },
-      (err) => {
-        alert('Could not retrieve current location. Using Dehradun fallback.');
+      () => {
+        alert('Could not retrieve device location. Please click directly on the map.');
       },
       { timeout: 10000 }
     );
   };
 
-  // Handle photo file selection with client validation
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -93,16 +92,20 @@ export default function ReportIncidentPage() {
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+
+    if (!latitude || !longitude) {
+      setLocationError('Please select the incident location on the map.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       let photoUrl = null;
 
-      // 1. Upload photo if selected
       if (photoFile) {
         const formData = new FormData();
         formData.append('file', photoFile);
@@ -112,7 +115,6 @@ export default function ReportIncidentPage() {
         photoUrl = uploadRes.data.photo_url;
       }
 
-      // 2. Submit incident data
       const payload = {
         type: incidentType,
         description,
@@ -136,308 +138,318 @@ export default function ReportIncidentPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Title & Guidance Header */}
-      <div className="text-center max-w-2xl mx-auto mb-8">
-        <span className="text-xs uppercase tracking-widest font-bold text-[#C47A35] bg-[#594538]/30 border border-[#594538]/60 px-3 py-1 rounded-full inline-block mb-2">
-          Public Emergency Reporting
-        </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F0E6D8]">
-          Report a Flood or Emergency Incident
-        </h1>
-        <p className="text-sm text-[#B5A493] mt-2">
-          Submit flood levels, hazard zones, or urgent rescue requirements. No citizen login required. Our dispatch operators triage reports immediately by priority score.
-        </p>
+    <div className="flex-1 w-full bg-[#F5F0E5] text-[#343B30]">
+      {/* Emergency Hotline Ticker */}
+      <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+        <div className="flex items-center gap-2 text-[#5A6354]">
+          <span className="w-2 h-2 rounded-full bg-[#CF806B]" />
+          <span className="text-[#343B30] font-bold">DEHRADUN EMERGENCY INTAKE</span>
+          <span className="hidden sm:inline text-[#5A6354]">&bull; Public Incident Intake Portal</span>
+        </div>
+        <div className="flex items-center gap-3 text-[11px] text-[#5A6354]">
+          <span className="flex items-center gap-1 text-[#DC2626] font-semibold">
+            <PhoneCall className="w-3 h-3" /> Police/Ambulance: 112
+          </span>
+          <span className="hidden sm:inline text-[#DFD8C8]">&bull;</span>
+          <span className="hidden sm:inline">District Disaster Hotline: 1077</span>
+        </div>
       </div>
 
-      {/* Confirmation Modal / Screen */}
       {submittedReport ? (
-        <div className="bg-[#242321] border border-[#594538] rounded-2xl p-6 sm:p-8 shadow-card text-center animate-fade-in">
-          <div className="w-14 h-14 bg-[#C47A35]/20 border border-[#C47A35]/40 text-[#C47A35] rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
+        /* Clearance Docket / Confirmation */
+        <div className="max-w-xl mx-auto px-4 py-12">
+          <div className="bg-[#FCFAF6] border border-[#DFD8C8] rounded-xl overflow-hidden shadow-card">
+            <div className="p-6 bg-[#EFE9DC] border-b border-[#DFD8C8] text-center">
+              <div className="w-12 h-12 bg-[#EEF2E6] border border-[#B2BCA0] text-[#697C58] rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-mono text-[#697C58] uppercase tracking-widest block font-bold">
+                INCIDENT REGISTERED IN QUEUE
+              </span>
+              <h2 className="text-xl font-bold text-[#343B30] mt-1">
+                Emergency Dispatch Record Established
+              </h2>
+              <p className="text-xs text-[#5A6354] mt-1 max-w-sm mx-auto">
+                Municipal response operators have received your triage ticket and are analyzing nearby response units.
+              </p>
+            </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-[#F0E6D8]">
-            Emergency Report Successfully Registered!
-          </h2>
-          <p className="text-sm text-[#B5A493] mt-2 max-w-md mx-auto">
-            Your incident has been dispatched to Dehradun municipal emergency responders. Please save your Tracking ID below to track real-time updates.
-          </p>
+            <div className="p-6 space-y-4">
+              <div className="p-4 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-mono text-[#5A6354] uppercase block">Assigned Tracking ID</span>
+                  <span className="text-2xl font-mono font-bold text-[#697C58]">{submittedReport.tracking_id}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-mono text-[#5A6354] uppercase block">Triage Score</span>
+                  <span className="text-sm font-mono font-bold text-[#343B30]">
+                    {submittedReport.priority_level} ({submittedReport.priority_score} pts)
+                  </span>
+                </div>
+              </div>
 
-          <div className="my-6 p-4 rounded-xl bg-[#191817] border border-[#594538] inline-block max-w-xs w-full">
-            <span className="text-xs font-semibold text-[#B5A493] uppercase tracking-wider block">
-              Your Tracking ID
-            </span>
-            <span className="text-2xl sm:text-3xl font-mono font-bold text-[#C47A35] block mt-1">
-              {submittedReport.tracking_id}
-            </span>
-            <span className="text-[11px] font-medium text-[#F5A962] bg-[#3D2517] px-2 py-0.5 rounded border border-[#C47A35]/40 mt-2 inline-block">
-              Priority Tier: {submittedReport.priority_level} ({submittedReport.priority_score} pts)
-            </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              to={`/track?id=${submittedReport.tracking_id}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold bg-[#C47A35] hover:bg-[#D48944] text-[#191817] transition-colors shadow-amber"
-            >
-              Track My Report Now
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            <button
-              onClick={() => {
-                setSubmittedReport(null);
-                setDescription('');
-                setPhotoFile(null);
-                setPhotoPreview(null);
-              }}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-medium text-[#F0E6D8] hover:bg-[#594538]/40 border border-[#594538] transition-colors"
-            >
-              Submit Another Report
-            </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  to={`/track?id=${submittedReport.tracking_id}`}
+                  className="flex-1 py-2.5 px-4 rounded-lg bg-[#697C58] hover:bg-[#576748] text-white font-semibold text-xs text-center flex items-center justify-center gap-2 transition-colors shadow-xs"
+                >
+                  <span>Track Status Live</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <button
+                  onClick={() => {
+                    setSubmittedReport(null);
+                    setDescription('');
+                    setLatitude(null);
+                    setLongitude(null);
+                    setPhotoFile(null);
+                    setPhotoPreview(null);
+                  }}
+                  className="px-4 py-2.5 rounded-lg bg-[#EFE9DC] hover:bg-[#DFD8C8] text-[#343B30] font-semibold text-xs transition-colors border border-[#DFD8C8]"
+                >
+                  File Another Incident
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
-        /* Report Form Card */
-        <div className="bg-[#242321] border border-[#594538] rounded-2xl p-6 sm:p-8 shadow-card">
-          {errorMessage && (
-            <div className="p-3 mb-6 rounded-lg bg-[#42201D] border border-[#FFA494]/40 text-[#FFA494] text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
+        /* Asymmetric Split Intake Studio */
+        <form onSubmit={handleSubmit} className="w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-6rem)]">
+            {/* Left Stage (5 cols): Incident Specification */}
+            <div className="lg:col-span-5 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r border-[#DFD8C8] bg-[#FCFAF6] space-y-5 overflow-y-auto">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold block">
+                  Step 01 / Hazard Category
+                </span>
+                <label className="block text-xs font-bold text-[#343B30] mt-0.5">
+                  Select Classification <span className="text-[#DC2626]">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {INCIDENT_TYPES.map((item) => {
+                    const isSelected = incidentType === item.name;
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        type="button"
+                        key={item.name}
+                        onClick={() => setIncidentType(item.name)}
+                        className={`p-2.5 rounded-lg text-left text-xs font-medium border transition-all flex items-center gap-2 ${
+                          isSelected
+                            ? 'bg-[#EEF2E6] border-[#697C58] text-[#697C58] font-bold shadow-xs'
+                            : 'bg-[#FCFAF6] border-[#DFD8C8] text-[#343B30] hover:border-[#BAC7AF]'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#697C58]' : 'text-[#5A6354]'}`} />
+                        <span className="truncate">{item.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 1. Incident Type */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-2">
-                1. Incident Category <span className="text-[#C47A35]">*</span>
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                {INCIDENT_TYPES.map((type) => {
-                  const isSelected = incidentType === type;
-                  return (
+              {/* Description */}
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold block">
+                  Step 02 / Ground Observation
+                </span>
+                <label className="block text-xs font-bold text-[#343B30] mt-0.5 mb-1.5">
+                  Situation Description <span className="text-[#DC2626]">*</span>
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  placeholder="State water depth, landmarks, trapped individuals, road blockage context..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full text-xs rounded-lg border border-[#DFD8C8] p-3 bg-[#FFFFFF] text-[#343B30] placeholder-[#7C8775] focus:outline-none focus:border-[#697C58]"
+                />
+              </div>
+
+              {/* Impact Metrics */}
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold block">
+                  Step 03 / Risk Assessment
+                </span>
+                <div className="grid grid-cols-2 gap-3 mt-1.5">
+                  <div>
+                    <label className="block text-[11px] text-[#5A6354] mb-1 font-medium font-mono">
+                      Estimated People Affected
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={500}
+                      value={peopleAffected}
+                      onChange={(e) => setPeopleAffected(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full text-xs rounded-lg border border-[#DFD8C8] bg-[#FFFFFF] p-2 text-[#343B30] font-mono focus:outline-none focus:border-[#697C58]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-[#5A6354] mb-1 font-medium font-mono">
+                      Vulnerable Groups Involved?
+                    </label>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setVulnerableInvolved(true)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs border font-medium transition-all ${
+                          vulnerableInvolved ? 'bg-[#EEF2E6] border-[#697C58] text-[#697C58] font-bold' : 'bg-[#FCFAF6] border-[#DFD8C8] text-[#5A6354]'
+                        }`}
+                      >
+                        Yes (+15)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVulnerableInvolved(false)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs border font-medium transition-all ${
+                          !vulnerableInvolved ? 'bg-[#EEF2E6] border-[#697C58] text-[#697C58] font-bold' : 'bg-[#FCFAF6] border-[#DFD8C8] text-[#5A6354]'
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Severity */}
+                <div className="mt-3">
+                  <label className="block text-[11px] text-[#5A6354] mb-1 font-medium font-mono">
+                    Severity Scale (1 to 5)
+                  </label>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[1, 2, 3, 4, 5].map((lvl) => (
+                      <button
+                        type="button"
+                        key={lvl}
+                        onClick={() => setSeverity(lvl)}
+                        className={`py-1.5 rounded-lg border text-center font-mono text-xs transition-all ${
+                          severity === lvl
+                            ? 'bg-[#697C58] border-[#697C58] text-white font-bold shadow-xs'
+                            : 'bg-[#FCFAF6] border-[#DFD8C8] text-[#343B30] hover:bg-[#EEF2E6]'
+                        }`}
+                      >
+                        {lvl}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Photo Upload */}
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold block">
+                  Step 04 / Evidence (Optional)
+                </span>
+                <div className="flex items-center gap-3 mt-1.5">
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#FCFAF6] border border-[#DFD8C8] hover:border-[#697C58] text-[#343B30] transition-colors">
+                    <Camera className="w-3.5 h-3.5 text-[#697C58]" />
+                    <span>Upload Photo</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                  {photoFile && (
+                    <span className="text-[11px] font-mono text-[#5A6354] truncate max-w-xs">{photoFile.name}</span>
+                  )}
+                </div>
+
+                {photoPreview && (
+                  <div className="mt-2 relative inline-block">
+                    <img src={photoPreview} alt="Preview" className="w-24 h-16 object-cover rounded-lg border border-[#DFD8C8]" />
                     <button
                       type="button"
-                      key={type}
-                      onClick={() => setIncidentType(type)}
-                      className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all ${
-                        isSelected
-                          ? 'border-[#C47A35] bg-[#C47A35]/20 text-[#C47A35]'
-                          : 'border-[#594538]/70 bg-[#191817] text-[#B5A493] hover:border-[#594538] hover:text-[#F0E6D8] hover:bg-[#2A2826]'
-                      }`}
+                      onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                      className="absolute -top-1.5 -right-1.5 bg-[#DC2626] text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]"
                     >
-                      <div className="flex items-center justify-between">
-                        <span>{type}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#C47A35]" />}
-                      </div>
+                      &times;
                     </button>
-                  );
-                })}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* 2. Description */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
-                2. Situation Description <span className="text-[#C47A35]">*</span>
-              </label>
-              <textarea
-                required
-                rows={3}
-                placeholder="Describe current water levels, trapped residents, hazards, or landmark references..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full text-xs sm:text-sm rounded-xl border border-[#594538] p-3 bg-[#191817] text-[#F0E6D8] placeholder-[#B5A493]/50 focus:outline-none focus:border-[#C47A35] focus:ring-1 focus:ring-[#C47A35] transition-all"
-              />
-            </div>
-
-            {/* 3. Location Picker (Map Click + "Use my location" button) */}
-            <div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8]">
-                  3. Incident Location <span className="text-[#C47A35]">*</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-[#B5A493] font-mono">
-                    {latitude.toFixed(4)}, {longitude.toFixed(4)}
+            {/* Right Stage (7 cols): Geographic Spatial Pin Locator */}
+            <div className="lg:col-span-7 flex flex-col bg-[#FCFAF6]">
+              {/* Map Locator Masthead */}
+              <div className="p-3 bg-[#EFE9DC] border-b border-[#DFD8C8] flex flex-wrap items-center justify-between gap-2 shrink-0">
+                <div>
+                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#343B30] block">
+                    Geographic Hazard Pin Placement
                   </span>
+                  <span className="text-[10px] text-[#5A6354]">
+                    Click directly on the map to pinpoint coordinates with street precision.
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleUseMyLocation}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#191817] hover:bg-[#594538]/40 text-[#F0E6D8] border border-[#594538] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FCFAF6] hover:bg-[#EEF2E6] text-[#697C58] border border-[#BAC7AF] text-xs font-mono font-semibold transition-colors"
                   >
-                    <Navigation className="w-3 h-3 text-[#C47A35]" />
-                    Use My Location
+                    <Navigation className="w-3 h-3 text-[#697C58]" />
+                    <span>Use Device GPS</span>
                   </button>
+
+                  {latitude && longitude ? (
+                    <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-[#EEF2E6] text-[#343B30] border border-[#B2BCA0] font-semibold">
+                      {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] font-bold">
+                      PIN REQUIRED
+                    </span>
+                  )}
                 </div>
               </div>
 
-              <div className="text-[11px] text-[#B5A493] mb-2 flex items-center gap-1.5">
-                <Info className="w-3 h-3 text-[#C47A35]" />
-                <span>Click anywhere on the map to accurately drop a pinpoint at the incident site.</span>
-              </div>
-
-              {/* Leaflet map with dropped pin */}
-              <IncidentMap
-                center={[latitude, longitude]}
-                zoom={14}
-                height="280px"
-                droppedLocation={{ latitude, longitude }}
-                onLocationSelect={handleMapLocationSelect}
-                showLegend={false}
-              />
-            </div>
-
-            {/* 4. Impact metrics: People Affected & Vulnerable Groups */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
-                  4. Estimated People Affected
-                </label>
-                <div className="relative">
-                  <Users className="w-4 h-4 text-[#B5A493] absolute left-3 top-3" />
-                  <input
-                    type="number"
-                    min={0}
-                    max={500}
-                    value={peopleAffected}
-                    onChange={(e) => setPeopleAffected(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full text-sm rounded-xl border border-[#594538] bg-[#191817] pl-9 pr-3 py-2.5 text-[#F0E6D8] focus:outline-none focus:border-[#C47A35] focus:ring-1 focus:ring-[#C47A35]"
-                  />
-                </div>
-                <span className="text-[11px] text-[#B5A493] mt-1 block">
-                  Scoring adds 1 point per person (capped at +20).
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
-                  5. Vulnerable Groups Involved?
-                </label>
-                <div className="flex gap-2 mt-1">
-                  <button
-                    type="button"
-                    onClick={() => setVulnerableInvolved(true)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                      vulnerableInvolved
-                        ? 'bg-[#3D2517] border-[#C47A35] text-[#F0E6D8]'
-                        : 'border-[#594538]/70 bg-[#191817] text-[#B5A493] hover:bg-[#2A2826] hover:text-[#F0E6D8]'
-                    }`}
-                  >
-                    Yes (Elderly / Children / Disabled)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setVulnerableInvolved(false)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                      !vulnerableInvolved
-                        ? 'bg-[#594538]/40 border-[#C47A35] text-[#F0E6D8]'
-                        : 'border-[#594538]/70 bg-[#191817] text-[#B5A493] hover:bg-[#2A2826] hover:text-[#F0E6D8]'
-                    }`}
-                  >
-                    No
-                  </button>
-                </div>
-                <span className="text-[11px] text-[#B5A493] mt-1 block">
-                  Assigns +15 priority points if vulnerable individuals are at risk.
-                </span>
-              </div>
-            </div>
-
-            {/* 6. Severity rating 1-5 */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
-                6. Situation Severity Scale (1 - 5)
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {[1, 2, 3, 4, 5].map((level) => {
-                  const isSelected = severity === level;
-                  return (
-                    <button
-                      type="button"
-                      key={level}
-                      onClick={() => setSeverity(level)}
-                      className={`py-3 rounded-xl border text-center transition-all ${
-                        isSelected
-                          ? 'border-[#C47A35] bg-[#C47A35] text-[#191817] font-bold shadow-amber'
-                          : 'border-[#594538]/70 bg-[#191817] text-[#B5A493] hover:bg-[#2A2826] hover:text-[#F0E6D8] font-medium'
-                      }`}
-                    >
-                      <span className="text-base block">{level}</span>
-                      <span className={`text-[10px] block mt-0.5 ${isSelected ? 'text-[#191817]' : 'text-[#B5A493]'}`}>
-                        {level === 1 ? 'Minor' : level === 3 ? 'Moderate' : level === 5 ? 'Severe' : ''}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 7. Optional Photo Upload */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#F0E6D8] mb-1.5">
-                7. Photo Attachment (Optional)
-              </label>
-              <div className="flex items-center gap-4">
-                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#191817] hover:bg-[#594538]/40 border border-[#594538] text-[#F0E6D8] transition-colors">
-                  <Camera className="w-4 h-4 text-[#C47A35]" />
-                  <span>Choose Photo File</span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                </label>
-                {photoFile && (
-                  <span className="text-xs text-[#B5A493] font-medium truncate max-w-xs">
-                    {photoFile.name}
-                  </span>
-                )}
-              </div>
-
-              {photoPreview && (
-                <div className="mt-3 relative inline-block">
-                  <img
-                    src={photoPreview}
-                    alt="Selected preview"
-                    className="w-32 h-24 object-cover rounded-lg border border-[#594538]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPhotoFile(null);
-                      setPhotoPreview(null);
-                    }}
-                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm"
-                  >
-                    &times;
-                  </button>
+              {/* Inline error notice if submitted without pin */}
+              {locationError && (
+                <div className="p-2 bg-[#FEF2F2] border-b border-[#FECACA] text-[#991B1B] text-xs font-mono flex items-center gap-2 px-3">
+                  <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
+                  <span>{locationError}</span>
                 </div>
               )}
-            </div>
 
-            {/* Submit Button */}
-            <div className="pt-2 border-t border-[#594538]">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-[#C47A35] hover:bg-[#D48944] text-[#191817] transition-all shadow-amber flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                {isSubmitting ? (
-                  <span>Registering Incident...</span>
-                ) : (
-                  <>
-                    <ShieldAlert className="w-4 h-4" />
-                    <span>Submit Emergency Report</span>
-                  </>
-                )}
-              </button>
+              {/* Full-Height Leaflet Canvas */}
+              <div className="flex-1 min-h-[360px] relative bg-[#E8E2D4]">
+                <IncidentMap
+                  center={[30.3165, 78.0322]}
+                  zoom={13}
+                  droppedLocation={latitude && longitude ? { latitude, longitude } : null}
+                  onLocationSelect={handleMapLocationSelect}
+                  showLegend={false}
+                />
+              </div>
+
+              {/* Bottom Action Command Bar */}
+              <div className="p-3 bg-[#FCFAF6] border-t border-[#DFD8C8] flex items-center justify-between gap-3 shrink-0">
+                <div className="text-[11px] text-[#5A6354]">
+                  {latitude && longitude ? (
+                    <span className="text-[#166534] font-medium font-mono">Coordinate locked on Dehradun Grid. Ready to transmit.</span>
+                  ) : (
+                    <span>Click on the map above to select site.</span>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2.5 rounded-lg bg-[#697C58] hover:bg-[#576748] text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-2 shadow-xs"
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>{isSubmitting ? 'Registering...' : 'Transmit Incident Report'}</span>
+                </button>
+              </div>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       )}
     </div>
   );

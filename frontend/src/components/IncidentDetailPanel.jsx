@@ -8,18 +8,15 @@ import {
   Users,
   Shield,
   AlertTriangle,
-  Send,
-  CheckCircle,
-  Truck,
   Flame,
   HeartPulse,
   LifeBuoy,
-  FileText,
-  AlertCircle
+  Radio,
 } from 'lucide-react';
 
 export default function IncidentDetailPanel({
   incident,
+  teams = [],
   onClose,
   onUpdateStatus,
   onAssignTeam,
@@ -28,10 +25,77 @@ export default function IncidentDetailPanel({
   const [comment, setComment] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
-  if (!incident) return null;
+  const statusOptions = ['Reported', 'Assigned', 'In Progress', 'Resolved', 'Rejected'];
+
+  const getTeamIcon = (type) => {
+    if (type === 'ambulance') return <HeartPulse className="w-3.5 h-3.5 text-[#16A34A]" />;
+    if (type === 'fire unit') return <Flame className="w-3.5 h-3.5 text-[#EA580C]" />;
+    return <LifeBuoy className="w-3.5 h-3.5 text-[#697C58]" />;
+  };
+
+  // If NO incident selected: Show District Fleet Readiness Monitor!
+  if (!incident) {
+    const availableCount = teams.filter((t) => t.status === 'Available').length;
+    return (
+      <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden">
+        {/* Header */}
+        <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC] flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Radio className="w-3.5 h-3.5 text-[#16A34A]" />
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#343B30]">
+              District Fleet Readiness
+            </span>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#EEF2E6] text-[#343B30] border border-[#B2BCA0] font-semibold">
+            {availableCount} / {teams.length} Ready
+          </span>
+        </div>
+
+        {/* Guidance Notice */}
+        <div className="p-3 bg-[#FCFAF6] border-b border-[#DFD8C8] text-xs text-[#5A6354] leading-relaxed">
+          <p>
+            Select any incident from the <strong className="text-[#343B30]">Triage Feed</strong> or the <strong className="text-[#343B30]">Map</strong> to view Haversine unit recommendations and dispatch controls.
+          </p>
+        </div>
+
+        {/* Fleet listing */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <span className="text-[10px] font-mono text-[#5A6354] uppercase tracking-wider block mb-1">
+            Registered Dehradun Response Units ({teams.length})
+          </span>
+          {teams.map((team) => (
+            <div
+              key={team.id}
+              className="p-2.5 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center justify-between text-xs"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-md bg-[#FFFFFF] border border-[#DFD8C8]">
+                  {getTeamIcon(team.type)}
+                </div>
+                <div>
+                  <span className="font-semibold text-xs text-[#343B30] block leading-tight">{team.name}</span>
+                  <span className="text-[10px] text-[#5A6354] capitalize">{team.type} &bull; {team.contact_number}</span>
+                </div>
+              </div>
+              <span
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-md border font-medium ${
+                  team.status === 'Available'
+                    ? 'bg-[#F0FDF4] text-[#166534] border-[#DCFCE7]'
+                    : team.status === 'Assigned'
+                    ? 'bg-[#FFF7ED] text-[#9A3412] border-[#FFEDD5]'
+                    : 'bg-[#EFE9DC] text-[#5A6354] border-[#DFD8C8]'
+                }`}
+              >
+                {team.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const breakdown = incident.score_breakdown || {};
-  const statusOptions = ['Reported', 'Assigned', 'In Progress', 'Resolved', 'Rejected'];
 
   const handleStatusChangeSubmit = (e) => {
     e.preventDefault();
@@ -41,193 +105,202 @@ export default function IncidentDetailPanel({
     setSelectedStatus('');
   };
 
-  const getTeamIcon = (type) => {
-    if (type === 'ambulance') return <HeartPulse className="w-4 h-4 text-emerald-600" />;
-    if (type === 'fire unit') return <Flame className="w-4 h-4 text-orange-600" />;
-    return <LifeBuoy className="w-4 h-4 text-sky-600" />;
-  };
-
   return (
-    <div className="bg-[#242321] border border-[#594538] rounded-xl flex flex-col h-full overflow-hidden shadow-card">
+    <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-[#594538] bg-[#191817] flex items-start justify-between gap-3">
+      <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC] flex items-start justify-between gap-2 shrink-0">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base text-[#C47A35] font-mono">
+            <span className="font-mono font-bold text-xs text-[#697C58]">
               {incident.tracking_id}
             </span>
             <PriorityBadge level={incident.priority_level} score={incident.priority_score} />
           </div>
-          <h3 className="font-semibold text-[#F0E6D8] text-sm mt-1">
+          <h3 className="font-bold text-[#343B30] text-xs mt-1">
             {incident.type}
           </h3>
         </div>
 
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg text-[#B5A493] hover:text-[#F0E6D8] hover:bg-[#594538]/40 transition-colors"
-          title="Close panel"
+          className="p-1 rounded-md text-[#5A6354] hover:text-[#343B30] hover:bg-[#DFD8C8] transition-colors"
+          title="Close incident panel"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Scrollable Content Body */}
-      <div className="p-4 flex-1 overflow-y-auto space-y-5 text-sm">
-        {/* Active Road Blockage Warning (if within 500m) */}
+      {/* Scrollable Body */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3.5 text-xs">
+        {/* Road Blockage Warning (if within 500m) */}
         {incident.nearby_blockages && incident.nearby_blockages.length > 0 && (
-          <div className="p-3 rounded-lg bg-[#3D2517]/90 border border-[#C47A35]/80 text-[#F0E6D8]">
+          <div className="p-2.5 rounded-lg bg-[#FFF7ED] border border-[#FFEDD5] text-[#9A3412]">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-[#C47A35] shrink-0 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-xs uppercase tracking-wide text-[#C47A35]">
-                  Road Blockage Warning
+                <span className="font-mono font-bold text-[10px] uppercase text-[#9A3412] block">
+                  Transit Hazard Warning
                 </span>
-                <p className="text-xs mt-0.5 text-[#F0E6D8]">
-                  This incident is within <strong>500m</strong> of an active blockage (
-                  {incident.nearby_blockages.map((b) => `${b.tracking_id} at ~${b.distance_meters}m`).join(', ')}
-                  ). Expect transit delays for responders.
+                <p className="text-[11px] text-[#7C2D12] mt-0.5 leading-tight">
+                  Within 500m of blockage ({incident.nearby_blockages.map((b) => `${b.tracking_id}`).join(', ')}). Reroute incoming responders.
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Incident Details Summary */}
-        <div className="space-y-2">
-          <p className="text-[#F0E6D8] bg-[#191817] p-3 rounded-lg border border-[#594538]/70 text-xs leading-relaxed">
+        {/* Citizen Description */}
+        <div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-1 font-semibold">
+            Citizen Situation Log
+          </span>
+          <p className="text-[#343B30] bg-[#FCFAF6] p-2.5 rounded-lg border border-[#DFD8C8] leading-relaxed text-xs">
             {incident.description}
           </p>
-
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2.5 rounded-lg border border-[#594538]/70 bg-[#191817]/60 flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#B5A493]" />
-              <div>
-                <span className="text-[#B5A493] block text-[10px]">People Affected</span>
-                <span className="font-semibold text-[#F0E6D8]">{incident.people_affected}</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-lg border border-[#594538]/70 bg-[#191817]/60 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#B5A493]" />
-              <div>
-                <span className="text-[#B5A493] block text-[10px]">Vulnerable Group</span>
-                <span className="font-semibold text-[#F0E6D8]">
-                  {incident.vulnerable_involved ? 'Yes (+15 pts)' : 'No'}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-lg border border-[#594538]/70 bg-[#191817]/60 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-[#B5A493]" />
-              <div>
-                <span className="text-[#B5A493] block text-[10px]">Coordinates</span>
-                <span className="font-mono text-[#F0E6D8] text-[11px]">
-                  {incident.latitude?.toFixed(4)}, {incident.longitude?.toFixed(4)}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-lg border border-[#594538]/70 bg-[#191817]/60 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#B5A493]" />
-              <div>
-                <span className="text-[#B5A493] block text-[10px]">Current Status</span>
-                <span className="font-semibold text-[#C47A35]">{incident.status}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Photo attachment if available */}
-          {incident.photo_url && (
-            <div className="mt-2">
-              <span className="text-xs font-semibold text-[#B5A493] block mb-1">
-                Citizen Photo Attachment:
-              </span>
-              <a
-                href={`${API_BASE_URL}${incident.photo_url}`}
-                target="_blank"
-                rel="noreferrer"
-                className="block overflow-hidden rounded-lg border border-[#594538] max-h-48 group bg-[#191817]"
-              >
-                <img
-                  src={`${API_BASE_URL}${incident.photo_url}`}
-                  alt="Incident site"
-                  className="w-full h-40 object-cover group-hover:scale-105 transition-transform"
-                />
-              </a>
-            </div>
-          )}
         </div>
 
-        {/* Priority Score Mathematical Breakdown */}
-        <div className="p-3 rounded-lg border border-[#594538] bg-[#191817]/70">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-semibold text-xs text-[#F0E6D8] uppercase tracking-wider">
-              Priority Score Calculation
+        {/* Telemetry Metrics Grid */}
+        <div className="grid grid-cols-2 gap-2 text-[11px]">
+          <div className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center gap-2">
+            <Users className="w-3.5 h-3.5 text-[#697C58]" />
+            <div>
+              <span className="text-[#5A6354] text-[10px] block font-mono">People Affected</span>
+              <span className="font-mono font-bold text-[#343B30]">{incident.people_affected}</span>
+            </div>
+          </div>
+          <div className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5 text-[#CF806B]" />
+            <div>
+              <span className="text-[#5A6354] text-[10px] block font-mono">Vulnerable Group</span>
+              <span className="font-bold text-[#343B30]">{incident.vulnerable_involved ? 'Yes (+15)' : 'No'}</span>
+            </div>
+          </div>
+          <div className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-[#697C58]" />
+            <div>
+              <span className="text-[#5A6354] text-[10px] block font-mono">Coordinates</span>
+              <span className="font-mono text-[10px] text-[#343B30]">{incident.latitude?.toFixed(4)}, {incident.longitude?.toFixed(4)}</span>
+            </div>
+          </div>
+          <div className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-[#7C8775]" />
+            <div>
+              <span className="text-[#5A6354] text-[10px] block font-mono">Status</span>
+              <span className="font-bold text-[#343B30]">{incident.status}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Photo attachment if available */}
+        {incident.photo_url && (
+          <div>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-1 font-semibold">
+              Attached Citizen Evidence
             </span>
-            <span className="font-bold text-xs bg-[#C47A35]/20 text-[#C47A35] border border-[#C47A35]/40 px-2 py-0.5 rounded">
-              Total = {incident.priority_score} pts
+            <a
+              href={`${API_BASE_URL}${incident.photo_url}`}
+              target="_blank"
+              rel="noreferrer"
+              className="block overflow-hidden rounded-lg border border-[#DFD8C8] max-h-36 bg-[#EFE9DC]"
+            >
+              <img
+                src={`${API_BASE_URL}${incident.photo_url}`}
+                alt="Site photo"
+                className="w-full h-32 object-cover hover:scale-105 transition-transform"
+              />
+            </a>
+          </div>
+        )}
+
+        {/* Priority Formula Calculation Breakdown */}
+        <div className="p-2.5 rounded-lg bg-[#EFE9DC] border border-[#DFD8C8]">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] font-semibold">
+              Priority Formula Breakdown
+            </span>
+            <span className="font-mono text-[10px] font-bold text-[#697C58]">
+              {incident.priority_score} pts
             </span>
           </div>
 
-          <div className="space-y-1.5 text-xs text-[#B5A493] font-mono">
-            <div className="flex justify-between items-center py-0.5 border-b border-[#594538]/40">
+          <div className="space-y-1 font-mono text-[11px] text-[#5A6354]">
+            <div className="flex justify-between py-0.5 border-b border-[#DFD8C8]">
               <span>Severity ({breakdown.severity_input || incident.severity} &times; 10)</span>
-              <span className="font-semibold text-[#F0E6D8]">
-                +{breakdown.severity_score ?? (incident.severity * 10)}
-              </span>
+              <span className="text-[#343B30]">+{breakdown.severity_score ?? (incident.severity * 10)}</span>
             </div>
-
-            <div className="flex justify-between items-center py-0.5 border-b border-[#594538]/40">
-              <span>People Affected (min({breakdown.people_affected_input ?? incident.people_affected}, 20))</span>
-              <span className="font-semibold text-[#F0E6D8]">
-                +{breakdown.people_score ?? Math.min(incident.people_affected, 20)}
-              </span>
+            <div className="flex justify-between py-0.5 border-b border-[#DFD8C8]">
+              <span>People Affected</span>
+              <span className="text-[#343B30]">+{breakdown.people_score ?? Math.min(incident.people_affected, 20)}</span>
             </div>
-
-            <div className="flex justify-between items-center py-0.5 border-b border-[#594538]/40">
-              <span>Vulnerable People ({incident.vulnerable_involved ? 'Yes' : 'No'})</span>
-              <span className="font-semibold text-[#F0E6D8]">
-                +{breakdown.vulnerable_score ?? (incident.vulnerable_involved ? 15 : 0)}
-              </span>
+            <div className="flex justify-between py-0.5 border-b border-[#DFD8C8]">
+              <span>Vulnerable Factor</span>
+              <span className="text-[#343B30]">+{breakdown.vulnerable_score ?? (incident.vulnerable_involved ? 15 : 0)}</span>
             </div>
-
-            <div className="flex justify-between items-center py-0.5 border-b border-[#594538]/40">
+            <div className="flex justify-between py-0.5 border-b border-[#DFD8C8]">
               <span>Type Weight ({incident.type})</span>
-              <span className="font-semibold text-[#F0E6D8]">
-                +{breakdown.type_score ?? 2}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center pt-1 font-bold text-[#C47A35]">
-              <span>Formula Result</span>
-              <span>
-                {incident.priority_score} &rarr; {incident.priority_level}
-              </span>
+              <span className="text-[#343B30]">+{breakdown.type_score ?? 2}</span>
             </div>
           </div>
         </div>
 
-        {/* Assigned Teams Section */}
-        {incident.assigned_resources && incident.assigned_resources.length > 0 && (
-          <div className="p-3 rounded-lg border border-[#594538] bg-[#191817]">
-            <span className="font-semibold text-xs text-[#F0E6D8] block mb-2">
-              Currently Assigned Emergency Units:
-            </span>
-            <div className="space-y-2">
-              {incident.assigned_resources.map((res) => (
-                <div
-                  key={res.id}
-                  className="flex items-center justify-between p-2 rounded bg-[#242321] border border-[#594538]/60 text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    {getTeamIcon(res.type)}
-                    <div>
-                      <span className="font-semibold text-[#F0E6D8] block">{res.name}</span>
-                      <span className="text-[11px] text-[#B5A493] capitalize">{res.type} &bull; {res.contact_number}</span>
+        {/* Nearest Suitable Response Units (Haversine Distance) */}
+        {incident.status !== 'Resolved' && incident.status !== 'Rejected' && (
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] font-semibold">
+                Nearest Available ({incident.suitable_type})
+              </span>
+              <span className="text-[10px] font-mono text-[#697C58] font-bold">Haversine GIS</span>
+            </div>
+
+            {incident.nearest_available_teams && incident.nearest_available_teams.length > 0 ? (
+              <div className="space-y-1.5">
+                {incident.nearest_available_teams.map((team) => (
+                  <div
+                    key={team.id}
+                    className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] hover:border-[#697C58] transition-colors flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-[#FFFFFF] border border-[#DFD8C8]">
+                        {getTeamIcon(team.type)}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-xs text-[#343B30] block leading-tight">{team.name}</span>
+                        <span className="text-[10px] text-[#697C58] font-mono font-medium">{team.distance_km} km away</span>
+                      </div>
                     </div>
+                    <button
+                      onClick={() => onAssignTeam(incident.id, team.id)}
+                      disabled={isLoadingAction}
+                      className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#697C58] hover:bg-[#576748] text-white transition-colors shrink-0 disabled:opacity-50 shadow-xs"
+                    >
+                      Dispatch
+                    </button>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#C47A35]/20 text-[#C47A35] border border-[#C47A35]/40">
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-[#5A6354] italic p-2 bg-[#FCFAF6] rounded-lg border border-[#DFD8C8]">
+                No available {incident.suitable_type} units in range.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Assigned Units */}
+        {incident.assigned_resources && incident.assigned_resources.length > 0 && (
+          <div className="p-2.5 rounded-lg bg-[#EFE9DC] border border-[#DFD8C8]">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-1.5 font-semibold">
+              Assigned Emergency Units ({incident.assigned_resources.length})
+            </span>
+            <div className="space-y-1">
+              {incident.assigned_resources.map((res) => (
+                <div key={res.id} className="flex items-center justify-between p-1.5 rounded-md bg-[#FCFAF6] border border-[#DFD8C8] text-xs">
+                  <div className="flex items-center gap-1.5">
+                    {getTeamIcon(res.type)}
+                    <span className="font-semibold text-[#343B30] text-xs">{res.name}</span>
+                  </div>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-[#EEF2E6] text-[#343B30] border border-[#B2BCA0] font-medium">
                     Deployed
                   </span>
                 </div>
@@ -236,133 +309,69 @@ export default function IncidentDetailPanel({
           </div>
         )}
 
-        {/* Nearest Suitable Emergency Teams for Dispatch */}
-        {incident.status !== 'Resolved' && incident.status !== 'Rejected' && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-xs text-[#F0E6D8] uppercase tracking-wider">
-                Nearest Available Units ({incident.suitable_type})
-              </span>
-              <span className="text-[10px] text-[#B5A493] font-mono">Haversine formula</span>
-            </div>
-
-            {incident.nearest_available_teams && incident.nearest_available_teams.length > 0 ? (
-              <div className="space-y-2">
-                {incident.nearest_available_teams.map((team) => (
-                  <div
-                    key={team.id}
-                    className="p-2.5 rounded-lg border border-[#594538]/70 hover:border-[#C47A35] bg-[#191817] transition-colors flex items-center justify-between gap-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded bg-[#242321] border border-[#594538]">
-                        {getTeamIcon(team.type)}
-                      </div>
-                      <div>
-                        <span className="font-semibold text-xs text-[#F0E6D8] block leading-tight">
-                          {team.name}
-                        </span>
-                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[#B5A493]">
-                          <span className="font-medium text-[#C47A35]">
-                            {team.distance_km} km away
-                          </span>
-                          <span>&bull;</span>
-                          <span>{team.contact_number}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => onAssignTeam(incident.id, team.id)}
-                      disabled={isLoadingAction}
-                      className="px-2.5 py-1 rounded text-xs font-semibold bg-[#C47A35] hover:bg-[#D48944] text-[#191817] transition-colors shrink-0 disabled:opacity-50"
-                    >
-                      Assign
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-[#B5A493] italic p-2 bg-[#191817] rounded border border-[#594538]/60">
-                No currently available {incident.suitable_type} units in range.
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Change Lifecycle Status Form */}
-        <div className="p-3 rounded-lg border border-[#594538] bg-[#191817]/70">
-          <span className="font-semibold text-xs text-[#F0E6D8] block mb-2 uppercase tracking-wider">
-            Update Lifecycle Status
+        {/* Transition Status Form */}
+        <div className="p-2.5 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8]">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-1.5 font-semibold">
+            Commit Status Transition
           </span>
-          <form onSubmit={handleStatusChangeSubmit} className="space-y-2.5">
-            <div className="flex gap-2">
+          <form onSubmit={handleStatusChangeSubmit} className="space-y-2">
+            <div className="flex gap-1.5">
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="flex-1 text-xs rounded-lg border border-[#594538] p-2 bg-[#242321] text-[#F0E6D8] focus:outline-none focus:border-[#C47A35] focus:ring-1 focus:ring-[#C47A35]"
+                className="flex-1 text-xs rounded-lg border border-[#DFD8C8] p-1.5 bg-[#FFFFFF] text-[#343B30] focus:outline-none focus:border-[#697C58]"
               >
-                <option value="" className="bg-[#242321] text-[#F0E6D8]">Select Next Status...</option>
+                <option value="">Next Status...</option>
                 {statusOptions.map((st) => (
-                  <option key={st} value={st} disabled={st === incident.status} className="bg-[#242321] text-[#F0E6D8]">
+                  <option key={st} value={st} disabled={st === incident.status}>
                     {st} {st === incident.status ? '(Current)' : ''}
                   </option>
                 ))}
               </select>
-
               <button
                 type="submit"
                 disabled={!selectedStatus || isLoadingAction}
-                className="px-3 py-2 rounded-lg text-xs font-bold bg-[#C47A35] hover:bg-[#D48944] text-[#191817] transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#697C58] hover:bg-[#576748] text-white transition-colors disabled:opacity-50 shadow-xs"
               >
-                Update
+                Commit
               </button>
             </div>
-
             <input
               type="text"
-              placeholder="Optional comment/action notes..."
+              placeholder="Operational action notes..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full text-xs rounded-lg border border-[#594538] p-2 bg-[#242321] text-[#F0E6D8] placeholder-[#B5A493]/50 focus:outline-none focus:border-[#C47A35] focus:ring-1 focus:ring-[#C47A35]"
+              className="w-full text-xs rounded-lg border border-[#DFD8C8] p-1.5 bg-[#FFFFFF] text-[#343B30] placeholder-[#7C8775] focus:outline-none focus:border-[#697C58]"
             />
           </form>
         </div>
 
-        {/* Status Lifecycle Timeline */}
+        {/* Audit Log */}
         <div>
-          <span className="font-semibold text-xs text-[#F0E6D8] block mb-2 uppercase tracking-wider">
-            Status Timeline (Updates)
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-2 font-semibold">
+            Dispatch Audit Log
           </span>
-
-          <div className="relative pl-5 border-l-2 border-[#594538] space-y-3.5 my-2">
+          <div className="relative pl-3.5 border-l border-[#DFD8C8] space-y-2">
             {incident.updates && incident.updates.length > 0 ? (
               incident.updates.map((update) => (
-                <div key={update.id} className="relative group">
-                  {/* Timeline dot */}
-                  <div className="absolute -left-[27px] top-0.5 w-3 h-3 rounded-full bg-[#C47A35] border-2 border-[#191817] shadow-sm" />
-
+                <div key={update.id} className="relative">
+                  <div className="absolute -left-[18px] top-1 w-2 h-2 rounded-full bg-[#697C58]" />
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-xs text-[#F0E6D8]">
-                        {update.new_status}
-                      </span>
-                      <span className="text-[10px] text-[#B5A493]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-xs text-[#343B30]">{update.new_status}</span>
+                      <span className="text-[10px] font-mono text-[#5A6354]">
                         {new Date(update.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-
-                    <p className="text-xs text-[#B5A493] mt-0.5">
-                      {update.comment || 'Status updated'}
-                    </p>
-
-                    <span className="text-[10px] text-[#B5A493]/70 font-mono">
-                      By: {update.changed_by}
-                    </span>
+                    {update.comment && (
+                      <p className="text-[11px] text-[#5A6354]">{update.comment}</p>
+                    )}
+                    <span className="text-[10px] text-[#7C8775] font-mono">By: {update.changed_by}</span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-xs text-[#B5A493] italic">No timeline history recorded.</p>
+              <p className="text-xs text-[#7C8775] italic">No audit records.</p>
             )}
           </div>
         </div>

@@ -10,9 +10,9 @@ import AnalyticsPage from './pages/AnalyticsPage';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-[#191817] text-[#F0E6D8] flex flex-col font-sans selection:bg-[#C47A35] selection:text-[#191817]">
+      <div className="min-h-screen bg-[#F5F0E5] text-[#343B30] flex flex-col font-sans selection:bg-[#697C58] selection:text-white">
         <Navbar />
-        <main className="flex-1">
+        <main className="flex-1 flex flex-col">
           <Routes>
             {/* Public citizen routes */}
             <Route path="/" element={<ReportIncidentPage />} />
@@ -29,10 +29,16 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
-        <footer className="border-t border-[#594538]/50 bg-[#242321] py-4 text-center text-xs text-[#B5A493]">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>&copy; {new Date().getFullYear()} Flood & Emergency Incident Reporting System &bull; Dehradun District</span>
-            <span className="text-[11px] text-[#B5A493]/70">College Mini-Project &bull; Leaflet &bull; FastAPI &bull; SQLite</span>
+        <footer className="border-t border-[#DFD8C8] bg-[#FCFAF6] py-3.5 text-xs text-[#5A6354]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#343B30]">DECTS</span>
+              <span className="text-[#DFD8C8]">&bull;</span>
+              <span>Disaster & Emergency Coordination and Triage System</span>
+            </div>
+            <div className="text-[11px] text-[#5A6354]">
+              Dehradun District Operational Platform &bull; Real-time Incident Dispatch
+            </div>
           </div>
         </footer>
       </div>

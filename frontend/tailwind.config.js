@@ -4,58 +4,95 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
+        // Core Palette: Olive + Terracotta | Earthy, Fresh, Modern
+        ivory: {
+          DEFAULT: '#F5F0E5', // Warm ivory canvas
+          surface: '#FCFAF6', // Clean elevated surface
+          panel: '#EFE9DC',   // Slightly deeper ivory for nested sections
+          border: '#DFD8C8',  // Soft warm border
+          'border-strong': '#CAC1AE',
+        },
+        sage: {
+          DEFAULT: '#C6CDAA', // Light sage
+          light: '#DFE4CD',
+          subtle: '#EEF2E6',
+          border: '#B2BCA0',
+          dark: '#586348',
+          text: '#434D37',
+        },
+        olive: {
+          DEFAULT: '#697C58', // Deep olive (primary buttons, active nav, key accents)
+          hover: '#576748',
+          dark: '#455239',
+          light: '#7F936C',
+          subtle: '#EFF3EB',
+          border: '#BAC7AF',
+        },
+        terracotta: {
+          DEFAULT: '#CF806B', // Muted terracotta (secondary actions, highlights)
+          hover: '#BA6E5A',
+          dark: '#9F5542',
+          light: '#DF9886',
+          subtle: '#FAF1EE',
+          border: '#E5BFB5',
+        },
         charcoal: {
-          DEFAULT: '#242321', // Primary dark backgrounds and navigation
-          dark: '#191817',    // Deep Charcoal - page backgrounds
-          light: '#2E2C2A',
-          surface: '#242321',
+          DEFAULT: '#343B30', // Charcoal green (headings, body text, nav)
+          secondary: '#5A6354', // Muted body text
+          muted: '#7C8775',   // Subdued metadata & placeholders
+          border: '#B8C1B4',
         },
-        earth: {
-          DEFAULT: '#594538', // Secondary surfaces, cards, and subtle borders
-          dark: '#3E3128',
-          light: '#735B4B',
-          border: '#594538',
+        // Unified legacy/utility aliases mapped to the earthy palette
+        brand: {
+          DEFAULT: '#697C58', // Deep Olive
+          hover: '#576748',
+          light: '#7F936C',
+          subtle: '#EEF2E6',  // Sage tint
+          border: '#B2BCA0',
         },
-        amber: {
-          DEFAULT: '#C47A35', // Burnt Amber - primary accent, buttons, active states
-          hover: '#D48944',
-          dark: '#A36024',
-          light: '#E6A265',
+        canvas: {
+          DEFAULT: '#F5F0E5', // Warm Ivory
+          surface: '#FCFAF6', // Elevated ivory
+          subtle: '#EFE9DC',
+          border: '#DFD8C8',
+          'border-strong': '#CAC1AE',
         },
-        cream: {
-          DEFAULT: '#F0E6D8', // Warm Cream - primary text on dark backgrounds
-          muted: '#E2D5C3',
+        ink: {
+          DEFAULT: '#343B30', // Charcoal Green
+          secondary: '#5A6354',
+          muted: '#7C8775',
         },
-        taupe: {
-          DEFAULT: '#B5A493', // Muted Taupe - secondary text and supporting labels
-          light: '#C8BAAB',
-          dark: '#8E7D6E',
+        // Semantic emergency response colors (Red, Amber, Orange, Green)
+        triage: {
+          critical: '#DC2626',
+          'critical-bg': '#FEF2F2',
+          'critical-border': '#FECACA',
+          'critical-text': '#991B1B',
+          high: '#EA580C',
+          'high-bg': '#FFF7ED',
+          'high-border': '#FFEDD5',
+          'high-text': '#9A3412',
+          medium: '#D97706',
+          'medium-bg': '#FFFBEB',
+          'medium-border': '#FEF3C7',
+          'medium-text': '#92400E',
+          low: '#16A34A',
+          'low-bg': '#F0FDF4',
+          'low-border': '#DCFCE7',
+          'low-text': '#166534',
         },
-        priority: {
-          critical: '#42201D',
-          criticalText: '#FFA494',
-          criticalBorder: '#73352E',
-          high: '#3D2517',
-          highText: '#F5A962',
-          highBorder: '#7A4526',
-          medium: '#382D1D',
-          mediumText: '#EBC57A',
-          mediumBorder: '#6E542C',
-          low: '#233327',
-          lowText: '#9CD4A8',
-          lowBorder: '#3B5942',
-        }
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       boxShadow: {
-        soft: '0 4px 20px -2px rgba(0, 0, 0, 0.45)',
-        card: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
-        amber: '0 0 16px rgba(196, 122, 53, 0.25)',
+        card: '0 1px 3px 0 rgba(52, 59, 48, 0.05), 0 1px 2px -1px rgba(52, 59, 48, 0.03)',
+        subtle: '0 2px 8px 0 rgba(52, 59, 48, 0.05)',
       }
     },
   },

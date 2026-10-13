@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldAlert, MapPin, Search, BarChart3, LogIn, LogOut, User } from 'lucide-react';
+import { Radio, Search, Terminal, BarChart2, LogIn, LogOut, PlusCircle } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
@@ -17,33 +17,47 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { name: 'Report Incident', path: '/', icon: ShieldAlert },
-    { name: 'Track Report', path: '/track', icon: Search },
-    { name: 'Operator Dashboard', path: '/operator/dashboard', icon: MapPin },
-    { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+    { name: 'Incident Intake', path: '/', icon: PlusCircle, label: 'Intake' },
+    { name: 'Public Tracking', path: '/track', icon: Search, label: 'Tracking' },
+    { name: 'Command Console', path: '/operator/dashboard', icon: Terminal, label: 'Console' },
+    { name: 'Intelligence', path: '/analytics', icon: BarChart2, label: 'Analytics' },
   ];
 
   return (
-    <header className="sticky top-0 z-30 bg-[#242321]/95 backdrop-blur-md border-b border-[#594538]/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo / Brand */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg bg-[#C47A35] flex items-center justify-center text-[#191817] font-bold shadow-md transition-transform group-hover:scale-105">
-              <ShieldAlert className="w-5 h-5" />
+    <header className="sticky top-0 z-40 bg-[#FCFAF6]/95 backdrop-blur-md border-b border-[#DFD8C8]">
+      <div className="w-full px-4 sm:px-6">
+        <div className="flex items-center justify-between h-14">
+          {/* Brand Identity / Olive & Terracotta Emblem */}
+          <Link to="/" className="flex items-center gap-3 group focus:outline-none">
+            <div className="w-8 h-8 rounded-lg bg-[#EEF2E6] border border-[#B2BCA0] flex items-center justify-center p-1.5 transition-colors group-hover:border-[#697C58] shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" className="w-full h-full">
+                <path d="M24 4L42 12V24C42 34 34.5 41.5 24 44C13.5 41.5 6 34 6 24V12L24 4Z" fill="#F5F0E5" stroke="#697C58" strokeWidth="2.5" strokeLinejoin="round"/>
+                <circle cx="24" cy="24" r="13" stroke="#C6CDAA" strokeWidth="1.5" strokeDasharray="2 3"/>
+                <circle cx="24" cy="24" r="7" stroke="#697C58" strokeWidth="1.2" opacity="0.6"/>
+                <line x1="24" y1="11" x2="24" y2="17" stroke="#697C58" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="24" y1="31" x2="24" y2="37" stroke="#697C58" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="11" y1="24" x2="17" y2="24" stroke="#697C58" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="31" y1="24" x2="37" y2="24" stroke="#697C58" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="24" cy="24" r="3.2" fill="#CF806B"/>
+              </svg>
             </div>
             <div>
-              <span className="font-bold text-base tracking-tight text-[#F0E6D8] block leading-tight">
-                CrisisResponse Dehradun
-              </span>
-              <span className="text-[11px] text-[#B5A493] font-medium">
-                Emergency & Flood Management
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-bold text-sm tracking-tight text-[#343B30]">
+                  DECTS
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#EEF2E6] text-[#697C58] border border-[#BAC7AF] font-bold uppercase">
+                  Dehradun
+                </span>
+              </div>
+              <span className="text-[10px] text-[#5A6354] font-mono tracking-wider uppercase block leading-none mt-0.5">
+                Emergency Coordination System
               </span>
             </div>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5">
+          {/* Center Navigation Links - Earthy Segmented Pill Switch */}
+          <nav className="hidden md:flex items-center gap-1 p-1 rounded-lg bg-[#EFE9DC] border border-[#DFD8C8]">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.path;
@@ -51,14 +65,14 @@ export default function Navbar() {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                     isActive
-                      ? 'bg-[#C47A35]/20 text-[#C47A35] border border-[#C47A35]/40 font-semibold shadow-sm'
-                      : 'text-[#B5A493] hover:text-[#F0E6D8] hover:bg-[#594538]/35 border border-transparent'
+                      ? 'bg-[#FCFAF6] text-[#697C58] font-bold shadow-xs border border-[#DFD8C8]/60'
+                      : 'text-[#5A6354] hover:text-[#343B30] hover:bg-[#E5DFD0]'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {link.name}
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#697C58]' : 'text-[#7C8775]'}`} />
+                  <span>{link.label}</span>
                 </Link>
               );
             })}
@@ -67,26 +81,28 @@ export default function Navbar() {
           {/* Right Action: Auth button */}
           <div className="flex items-center gap-2">
             {token ? (
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-[#594538]/50 text-[#F0E6D8] border border-[#594538]">
-                  <User className="w-3.5 h-3.5 text-[#C47A35]" />
-                  {user?.username || 'Operator'}
-                </span>
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-[#EEF2E6] text-[#343B30] border border-[#B2BCA0]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+                  <span className="font-mono font-medium text-[#343B30]">{user?.username || 'operator'}</span>
+                  <span className="text-[10px] font-mono text-[#5A6354]">({user?.role || 'operator'})</span>
+                </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#B5A493] hover:text-[#FFA494] hover:bg-[#42201D]/40 border border-[#594538]/60 transition-colors"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[#5A6354] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-[#DFD8C8] transition-colors"
+                  title="Sign out of operator console"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  Logout
+                  <span className="hidden sm:inline">Logout</span>
                 </button>
               </div>
             ) : (
               <Link
                 to="/operator/login"
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#C47A35] hover:bg-[#D48944] text-[#191817] transition-all shadow-md hover:shadow-amber"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#697C58] hover:bg-[#576748] text-[#F5F0E5] transition-colors shadow-xs"
               >
-                <LogIn className="w-3.5 h-3.5" />
-                Operator Portal
+                <LogIn className="w-3.5 h-3.5 text-[#F5F0E5]" />
+                <span>Operator Portal</span>
               </Link>
             )}
           </div>
@@ -94,7 +110,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile nav bar */}
-      <div className="flex md:hidden border-t border-[#594538]/60 bg-[#242321] px-2 py-1 justify-around text-xs">
+      <div className="flex md:hidden border-t border-[#DFD8C8] bg-[#FCFAF6] px-2 py-1.5 justify-around text-xs">
         {navLinks.map((link) => {
           const Icon = link.icon;
           const isActive = location.pathname === link.path;
@@ -102,12 +118,12 @@ export default function Navbar() {
             <Link
               key={link.path}
               to={link.path}
-              className={`flex flex-col items-center py-1.5 px-2 rounded-md transition-colors ${
-                isActive ? 'text-[#C47A35] font-bold bg-[#C47A35]/15' : 'text-[#B5A493]'
+              className={`flex flex-col items-center py-1 px-3 rounded-md transition-colors ${
+                isActive ? 'text-[#697C58] font-bold bg-[#EEF2E6]' : 'text-[#5A6354]'
               }`}
             >
-              <Icon className="w-4 h-4" />
-              <span>{link.name.split(' ')[0]}</span>
+              <Icon className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px] font-mono">{link.label}</span>
             </Link>
           );
         })}

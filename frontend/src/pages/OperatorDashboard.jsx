@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import WeatherBanner from '../components/WeatherBanner';
-import SummaryCards from '../components/SummaryCards';
 import IncidentMap from '../components/IncidentMap';
 import IncidentTable from '../components/IncidentTable';
 import IncidentDetailPanel from '../components/IncidentDetailPanel';
-import { RefreshCw, Radio, Layers, AlertCircle } from 'lucide-react';
+import { RefreshCw, Radio, CloudRain, AlertTriangle } from 'lucide-react';
 
 export default function OperatorDashboard() {
   const navigate = useNavigate();
@@ -26,7 +24,9 @@ export default function OperatorDashboard() {
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState(new Date());
 
-  // Keep ref for current selectedIncident to persist or refresh detail panel smoothly
+  // Mobile view switcher: 'feed' | 'map' | 'deck'
+  const [mobileTab, setMobileTab] = useState('map');
+
   const selectedIncidentIdRef = useRef(null);
   selectedIncidentIdRef.current = selectedIncident?.id;
 
@@ -61,13 +61,13 @@ export default function OperatorDashboard() {
       setWeather(weatherRes.data);
       setLastRefreshedAt(new Date());
 
-      // If an incident was selected, refresh its details (nearest teams, updates timeline, etc.)
+      // If an incident was selected, refresh its details
       if (selectedIncidentIdRef.current) {
         try {
           const detailRes = await api.get(`/api/incidents/${selectedIncidentIdRef.current}`);
           setSelectedIncident(detailRes.data);
         } catch {
-          // If deleted or not found, leave as is
+          // If deleted or not found
         }
       }
     } catch (err) {
@@ -78,21 +78,18 @@ export default function OperatorDashboard() {
     }
   };
 
-  // Initial load and filter change trigger
   useEffect(() => {
     fetchData(false);
   }, [statusFilter, priorityFilter]);
 
-  // Polling every 10 seconds (as requested: "poll the API every 10 seconds instead of WebSockets")
   useEffect(() => {
     const interval = setInterval(() => {
       fetchData(true);
-    }, 10000); // 10,000 ms = 10s
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [statusFilter, priorityFilter]);
 
-  // Load detailed incident when user selects one
   const handleSelectIncident = async (incidentSummary) => {
     if (!incidentSummary) {
       setSelectedIncident(null);
@@ -102,6 +99,10 @@ export default function OperatorDashboard() {
       setIsLoadingAction(true);
       const res = await api.get(`/api/incidents/${incidentSummary.id}`);
       setSelectedIncident(res.data);
+      // On mobile, auto-switch to deck tab when an item is selected
+      if (window.innerWidth < 1024) {
+        setMobileTab('deck');
+      }
     } catch (err) {
       console.error('Failed to load incident detail:', err);
     } finally {
@@ -109,7 +110,6 @@ export default function OperatorDashboard() {
     }
   };
 
-  // Change lifecycle status (Reported -> Assigned -> In Progress -> Resolved / Rejected)
   const handleUpdateStatus = async (incidentId, newStatus, comment) => {
     setIsLoadingAction(true);
     try {
@@ -117,9 +117,7 @@ export default function OperatorDashboard() {
         new_status: newStatus,
         comment: comment || null,
       });
-      // Refresh data immediately
       await fetchData(true);
-      // Reload updated detail
       const detailRes = await api.get(`/api/incidents/${incidentId}`);
       setSelectedIncident(detailRes.data);
     } catch (err) {
@@ -129,17 +127,14 @@ export default function OperatorDashboard() {
     }
   };
 
-  // Assign nearest response team to incident
   const handleAssignTeam = async (incidentId, resourceId) => {
     setIsLoadingAction(true);
     try {
       await api.post(`/api/incidents/${incidentId}/assign`, {
         resource_id: resourceId,
-        comment: 'Dispatched via Operator Quick Assign',
+        comment: 'Dispatched via Operator Command Console',
       });
-      // Refresh data immediately
       await fetchData(true);
-      // Reload updated detail
       const detailRes = await api.get(`/api/incidents/${incidentId}`);
       setSelectedIncident(detailRes.data);
     } catch (err) {
@@ -149,7 +144,7 @@ export default function OperatorDashboard() {
     }
   };
 
-  // Calculate summary metrics
+  // Metrics
   const activeCount = incidents.filter((i) => ['Reported', 'Assigned', 'In Progress'].includes(i.status)).length;
   const criticalCount = incidents.filter((i) => i.priority_level === 'Critical').length;
   const assignedCount = incidents.filter((i) => ['Assigned', 'In Progress'].includes(i.status)).length;
@@ -157,85 +152,106 @@ export default function OperatorDashboard() {
   const availableTeamsCount = teams.filter((t) => t.status === 'Available').length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Top Bar: Title & Live Polling Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#F0E6D8] tracking-tight">
-            Dehradun Emergency Command Dashboard
-          </h1>
-          <p className="text-xs text-[#B5A493] mt-0.5">
-            Real-time incident dispatch, GIS hazard tracking, and response allocation.
-          </p>
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full overflow-hidden bg-[#F5F0E5]">
+      {/* 1. Ultra-Compact Operational Telemetry Bar (Earthy Olive & Ivory) */}
+      <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 text-xs font-mono">
+        {/* Left: District Grid & Live Heartbeat */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-[#343B30]">
+            <Radio className="w-3.5 h-3.5 text-[#16A34A] animate-pulse" />
+            <span className="font-bold text-[#697C58]">DEHRADUN GRID</span>
+            <span className="text-[#5A6354] text-[10px] hidden sm:inline">[30.3165°N, 78.0322°E]</span>
+          </div>
+
+          {/* Weather Ticker */}
+          {weather && (
+            <div className="hidden md:flex items-center gap-2 border-l border-[#DFD8C8] pl-3 text-[#5A6354]">
+              <div className="flex items-center gap-1">
+                {weather.is_warning ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-[#CF806B]" />
+                ) : (
+                  <CloudRain className="w-3.5 h-3.5 text-[#697C58]" />
+                )}
+                <span className="text-[#343B30] font-semibold">{weather.temperature}°C</span>
+              </div>
+              <span>&bull;</span>
+              <span>Precip: {weather.precipitation ?? weather.rain ?? 0} mm/h</span>
+              <span>&bull;</span>
+              <span>Wind: {weather.wind_speed} km/h</span>
+              {weather.is_warning && (
+                <span className="text-[10px] px-1 py-0.2 rounded bg-[#FAF1EE] text-[#9A3412] border border-[#E5BFB5] font-bold">
+                  WEATHER ADVISORY
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Live Polling Indicator */}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#242321] border border-[#594538] text-xs shadow-card">
-            <Radio className="w-3.5 h-3.5 text-[#C47A35] animate-pulse" />
-            <span className="text-[#B5A493] font-medium">Live (10s poll)</span>
-            <span className="text-[10px] text-[#B5A493]/70 border-l border-[#594538] pl-2 ml-1">
-              {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        {/* Center/Right: Live Triage Metrics Ribbon */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded-md bg-[#EFE9DC] border border-[#DFD8C8] text-[#343B30]">
+              Active: <strong>{activeCount}</strong>
+            </span>
+            <span className="px-2 py-0.5 rounded-md bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B]">
+              Crit: <strong>{criticalCount}</strong>
+            </span>
+            <span className="hidden sm:inline px-2 py-0.5 rounded-md bg-[#FAF1EE] border border-[#E5BFB5] text-[#9A3412]">
+              Deployed: <strong>{assignedCount}</strong>
+            </span>
+            <span className="hidden sm:inline px-2 py-0.5 rounded-md bg-[#EEF2E6] border border-[#B2BCA0] text-[#343B30]">
+              Fleet: <strong>{availableTeamsCount}/{teams.length}</strong>
             </span>
           </div>
 
           <button
             onClick={() => fetchData(false)}
             disabled={isRefreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#242321] hover:bg-[#2A2826] text-[#F0E6D8] border border-[#594538] hover:border-[#C47A35] shadow-card transition-colors disabled:opacity-50"
-            title="Manual refresh"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FCFAF6] hover:bg-[#EEF2E6] text-[#5A6354] hover:text-[#343B30] border border-[#DFD8C8] transition-colors disabled:opacity-50"
+            title="Manual telemetry sync"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#C47A35] ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[#697C58]' : ''}`} />
+            <span className="hidden sm:inline">Sync</span>
           </button>
         </div>
       </div>
 
-      {/* 1. Open-Meteo Weather Alert Banner */}
-      <WeatherBanner weather={weather} />
+      {/* Mobile Tab Switcher (<lg screens) */}
+      <div className="flex lg:hidden bg-[#FCFAF6] border-b border-[#DFD8C8] p-1 justify-around text-xs font-mono">
+        <button
+          onClick={() => setMobileTab('feed')}
+          className={`flex-1 py-1 rounded-md text-center transition-all ${
+            mobileTab === 'feed' ? 'bg-[#EEF2E6] text-[#697C58] font-bold' : 'text-[#5A6354]'
+          }`}
+        >
+          Queue ({incidents.length})
+        </button>
+        <button
+          onClick={() => setMobileTab('map')}
+          className={`flex-1 py-1 rounded-md text-center transition-all ${
+            mobileTab === 'map' ? 'bg-[#EEF2E6] text-[#697C58] font-bold' : 'text-[#5A6354]'
+          }`}
+        >
+          Tactical Map
+        </button>
+        <button
+          onClick={() => setMobileTab('deck')}
+          className={`flex-1 py-1 rounded-md text-center transition-all ${
+            mobileTab === 'deck' ? 'bg-[#EEF2E6] text-[#697C58] font-bold' : 'text-[#5A6354]'
+          }`}
+        >
+          {selectedIncident ? 'Dispatch Deck' : 'Fleet Deck'}
+        </button>
+      </div>
 
-      {/* 2. Summary Metric Cards */}
-      <SummaryCards
-        stats={{
-          active: activeCount,
-          critical: criticalCount,
-          assigned: assignedCount,
-          resolved: resolvedCount,
-          availableTeams: availableTeamsCount,
-          totalTeams: teams.length,
-        }}
-        onFilterByStatus={(st) => setStatusFilter(st)}
-        onFilterByPriority={(pr) => setPriorityFilter(pr)}
-      />
-
-      {/* 3. Main Operational Workspace (Map + Table vs Detail Panel) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Map & Incident Queue Table */}
-        <div className={`space-y-6 transition-all ${selectedIncident ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
-          {/* Map View */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#F0E6D8] flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-[#C47A35]" />
-                Live Incident Map & Deployed Response Units
-              </span>
-              <span className="text-[11px] text-[#B5A493] font-medium">
-                Dehradun, Uttarakhand
-              </span>
-            </div>
-
-            <IncidentMap
-              incidents={incidents}
-              teams={teams}
-              blockages={blockages}
-              selectedIncident={selectedIncident}
-              onSelectIncident={handleSelectIncident}
-              height="440px"
-              showLegend={true}
-            />
-          </div>
-
-          {/* Incidents Queue Table */}
+      {/* 2. Tri-Pane Integrated Cockpit Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Pane: Triage Feed (320px) */}
+        <div
+          className={`w-full lg:w-[320px] shrink-0 h-full ${
+            mobileTab === 'feed' ? 'block' : 'hidden lg:block'
+          }`}
+        >
           <IncidentTable
             incidents={incidents}
             selectedIncident={selectedIncident}
@@ -247,18 +263,37 @@ export default function OperatorDashboard() {
           />
         </div>
 
-        {/* Right Column: Incident Detail & Dispatch Panel */}
-        {selectedIncident && (
-          <div className="lg:col-span-5 sticky top-20 max-h-[calc(100vh-6rem)]">
-            <IncidentDetailPanel
-              incident={selectedIncident}
-              onClose={() => setSelectedIncident(null)}
-              onUpdateStatus={handleUpdateStatus}
-              onAssignTeam={handleAssignTeam}
-              isLoadingAction={isLoadingAction}
-            />
-          </div>
-        )}
+        {/* Center Pane: Full-Height GIS Tactical Map Canvas */}
+        <div
+          className={`flex-1 h-full relative ${
+            mobileTab === 'map' ? 'block' : 'hidden lg:block'
+          }`}
+        >
+          <IncidentMap
+            incidents={incidents}
+            teams={teams}
+            blockages={blockages}
+            selectedIncident={selectedIncident}
+            onSelectIncident={handleSelectIncident}
+            showLegend={true}
+          />
+        </div>
+
+        {/* Right Pane: Persistent Mission Deck (380px) */}
+        <div
+          className={`w-full lg:w-[380px] shrink-0 h-full ${
+            mobileTab === 'deck' ? 'block' : 'hidden lg:block'
+          }`}
+        >
+          <IncidentDetailPanel
+            incident={selectedIncident}
+            teams={teams}
+            onClose={() => setSelectedIncident(null)}
+            onUpdateStatus={handleUpdateStatus}
+            onAssignTeam={handleAssignTeam}
+            isLoadingAction={isLoadingAction}
+          />
+        </div>
       </div>
     </div>
   );
