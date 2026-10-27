@@ -9,68 +9,62 @@ export default function WeatherBanner({ weather }) {
 
   return (
     <div
-      className={`rounded-xl border p-3.5 mb-5 transition-colors shadow-xs ${
+      role="region"
+      aria-label="Meteorological Telemetry & Weather Advisory"
+      className={`rounded-md border px-3 py-2 mb-4 text-xs font-mono transition-colors ${
         isWarning
           ? 'bg-[#FAF1EE] border-[#E5BFB5] text-[#9A3412]'
-          : 'bg-[#EEF2E6] border-[#B2BCA0] text-[#343B30]'
+          : 'bg-[#FCFAF6] border-[#DFD8C8] text-[#343B30]'
       }`}
     >
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        {/* Left side: Alert or condition indicator */}
-        <div className="flex items-start sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* Left: Indicator & Message */}
+        <div className="flex items-center gap-2">
           <div
-            className={`p-2 rounded-lg shrink-0 ${
+            className={`p-1 rounded shrink-0 ${
               isWarning
-                ? 'bg-[#CF806B] text-white shadow-xs'
-                : 'bg-[#FCFAF6] text-[#697C58] border border-[#B2BCA0]'
+                ? 'bg-[#CF806B] text-white'
+                : 'bg-[#EEF2E6] text-[#697C58] border border-[#BAC7AF]'
             }`}
           >
             {isWarning ? (
-              <AlertTriangle className="w-4 h-4" />
+              <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
             ) : (
-              <CloudRain className="w-4 h-4" />
+              <CloudRain className="w-3.5 h-3.5" aria-hidden="true" />
             )}
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-xs tracking-wider uppercase font-mono text-[#5A6354]">
-                Weather Advisory &bull; {weather.city}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-bold text-[#343B30] uppercase text-[10px] tracking-wider">
+              {weather.city || 'Dehradun'} Weather:
+            </span>
+            <span className={isWarning ? 'font-bold text-[#9A3412]' : 'text-[#5A6354]'}>
+              {weather.warning_message || weather.weather_description || 'Routine conditions.'}
+            </span>
+            {weather.is_mock && (
+              <span className="text-[9px] px-1 py-0.2 rounded bg-[#EFE9DC] text-[#7C8775] border border-[#DFD8C8]">
+                Offline Cache
               </span>
-              {weather.is_mock && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#FCFAF6] text-[#5A6354] border border-[#DFD8C8] font-mono">
-                  Offline Fallback
-                </span>
-              )}
-            </div>
-            <p className="text-xs sm:text-sm font-semibold text-[#343B30] mt-0.5">
-              {weather.warning_message || 'Current local meteorological conditions.'}
-            </p>
+            )}
           </div>
         </div>
 
-        {/* Right side: Real-time API telemetry metrics */}
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs pt-2 lg:pt-0 border-t border-black/5 lg:border-t-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[#5A6354] font-mono">Temp:</span>
-            <span className="font-mono font-bold text-[#343B30]">{weather.temperature}°C</span>
+        {/* Right: Metrics readout */}
+        <div className="flex items-center gap-3 sm:gap-4 text-[11px] text-[#5A6354] shrink-0 border-t sm:border-t-0 border-[#DFD8C8]/60 pt-1 sm:pt-0">
+          <div className="flex items-center gap-1">
+            <span>Temp:</span>
+            <span className="font-bold text-[#343B30]">{weather.temperature}°C</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Droplets className="w-3.5 h-3.5 text-[#697C58]" />
-            <span className="text-[#5A6354] font-mono">Precip:</span>
-            <span className="font-mono font-bold text-[#343B30]">{precipVal ?? 0} mm/h</span>
+          <div className="flex items-center gap-1">
+            <Droplets className="w-3 h-3 text-[#697C58]" aria-hidden="true" />
+            <span>Precip:</span>
+            <span className="font-bold text-[#343B30]">{precipVal ?? 0} mm/h</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Wind className="w-3.5 h-3.5 text-[#7C8775]" />
-            <span className="text-[#5A6354] font-mono">Wind:</span>
-            <span className="font-mono font-bold text-[#343B30]">{weather.wind_speed} km/h</span>
-          </div>
-
-          <div className="flex items-center">
-            <span className="font-medium text-[11px] px-2 py-0.5 rounded-md bg-[#FCFAF6] border border-[#DFD8C8] text-[#343B30]">
-              {weather.weather_description}
-            </span>
+          <div className="flex items-center gap-1">
+            <Wind className="w-3 h-3 text-[#7C8775]" aria-hidden="true" />
+            <span>Wind:</span>
+            <span className="font-bold text-[#343B30]">{weather.wind_speed} km/h</span>
           </div>
         </div>
       </div>

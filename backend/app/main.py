@@ -12,12 +12,17 @@ from sqlalchemy import func
 from datetime import datetime, timezone
 from PIL import Image, UnidentifiedImageError
 
-from .database import engine, Base, get_db
-from .models import User, Incident, Resource, Assignment, IncidentUpdate
+from .database import engine, Base, get_db, run_migrations
+from .models import (
+    User, Incident, Resource, Assignment, IncidentUpdate,
+    AlertSubscription, EmergencyAlert, AlertDispatchLog
+)
 from .schemas import (
     LoginRequest, TokenResponse, UserResponse,
     IncidentCreate, IncidentResponse, IncidentStatusUpdate,
-    IncidentAssignRequest, ResourceSchema, AnalyticsResponse
+    IncidentAssignRequest, ResourceSchema, AnalyticsResponse,
+    AlertSubscriptionCreate, AlertSubscriptionUpdate, AlertSubscriptionResponse,
+    IncidentApprovalRequest, EmergencyAlertResponse, SubscriberAlertItem
 )
 from .auth import verify_password, create_access_token, get_current_user
 from .scoring import calculate_priority_score
@@ -28,8 +33,14 @@ from .utils import (
 )
 from .weather import get_weather_forecast
 from .seed import seed_database
+from .alerts import (
+    generate_subscriber_token,
+    get_default_safety_instructions,
+    dispatch_web_push_notification
+)
 
-# Create SQLite tables
+# Run safe SQLite schema migrations & create tables
+run_migrations(engine)
 Base.metadata.create_all(bind=engine)
 
 # Ensure upload directory exists
@@ -483,6 +494,9 @@ def list_incidents(
             "priority_score": inc.priority_score,
             "priority_level": inc.priority_level,
             "status": inc.status,
+            "is_verified": bool(inc.is_verified),
+            "verified_at": inc.verified_at,
+            "verified_by": inc.verified_by,
             "created_at": inc.created_at,
             "updated_at": inc.updated_at,
             "assigned_resources": teams
@@ -592,6 +606,20 @@ def get_incident_detail(
         "priority_level": incident.priority_level,
         "score_breakdown": breakdown_data,
         "status": incident.status,
+        "is_verified": bool(incident.is_verified),
+        "verified_at": incident.verified_at,
+        "verified_by": incident.verified_by,
+        "alert": {
+            "id": incident.alert.id,
+            "title": incident.alert.title,
+            "category": incident.alert.category,
+            "severity": incident.alert.severity,
+            "approx_location": incident.alert.approx_location,
+            "safety_instructions": incident.alert.safety_instructions,
+            "dispatched_subscribers_count": incident.alert.dispatched_subscribers_count,
+            "approved_by": incident.alert.approved_by,
+            "created_at": incident.alert.created_at
+        } if incident.alert else None,
         "created_at": incident.created_at,
         "updated_at": incident.updated_at,
         "updates": [
@@ -730,6 +758,68 @@ def assign_resource_to_incident(
         "resource_status": resource.status
     }
 
+@app.delete("/api/incidents/{incident_id}/assign/{resource_id}")
+def unassign_resource_from_incident(
+    incident_id: int,
+    resource_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Recall / Stand down an assigned resource:
+    - Sets assignment status to 'Recalled'
+    - Resets resource status to 'Available'
+    - If no other active assignments remain and status was 'Assigned', reverts incident status to 'Reported'
+    """
+    incident = db.query(Incident).filter(Incident.id == incident_id).first()
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    resource = db.query(Resource).filter(Resource.id == resource_id).first()
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    assignment = db.query(Assignment).filter(
+        Assignment.incident_id == incident.id,
+        Assignment.resource_id == resource.id,
+        Assignment.status == "Active"
+    ).first()
+
+    if not assignment:
+        raise HTTPException(status_code=400, detail="No active assignment found for this resource on this incident")
+
+    assignment.status = "Recalled"
+    assignment.released_at = datetime.utcnow()
+    resource.status = "Available"
+
+    # Check remaining active assignments
+    remaining = db.query(Assignment).filter(
+        Assignment.incident_id == incident.id,
+        Assignment.status == "Active"
+    ).count()
+
+    old_status = incident.status
+    if remaining == 0 and incident.status == "Assigned":
+        incident.status = "Reported"
+        incident.updated_at = datetime.utcnow()
+
+    update_log = IncidentUpdate(
+        incident_id=incident.id,
+        old_status=old_status,
+        new_status=incident.status,
+        changed_by=current_user.username,
+        comment=f"Recalled {resource.name} ({resource.type}) from incident back to Available."
+    )
+    db.add(update_log)
+    db.commit()
+
+    return {
+        "message": f"Successfully recalled {resource.name}",
+        "resource_id": resource.id,
+        "resource_status": "Available",
+        "incident_status": incident.status
+    }
+
 # ----------------------------------------------------
 # 4. RESOURCES & TEAMS
 # ----------------------------------------------------
@@ -837,6 +927,8 @@ def get_analytics(
 
     avail_res = db.query(Resource).filter(Resource.status == "Available").count()
     total_res = db.query(Resource).count()
+    verified_count = db.query(Incident).filter(Incident.is_verified == True).count()
+    active_subs_count = db.query(AlertSubscription).filter(AlertSubscription.is_active == True).count()
 
     return {
         "total_incidents": total,
@@ -849,5 +941,478 @@ def get_analytics(
         "low_incidents": low,
         "incidents_by_type": incidents_by_type,
         "available_resources_count": avail_res,
-        "total_resources_count": total_res
+        "total_resources_count": total_res,
+        "verified_incidents_count": verified_count,
+        "active_subscribers_count": active_subs_count
+    }
+
+
+# ----------------------------------------------------
+# 7. EMERGENCY ALERTS & VOLUNTARY SUBSCRIPTIONS
+# ----------------------------------------------------
+
+@app.post("/api/alerts/subscribe", response_model=AlertSubscriptionResponse)
+def subscribe_to_alerts(
+    payload: AlertSubscriptionCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Voluntary citizen subscription for location-targeted verified emergency alerts.
+    Requires explicit consent. Returns a cryptographically secure, unguessable token
+    that allows managing/cancelling subscription without public exposure.
+    """
+    check_rate_limit(request, limit=15, window_seconds=60, key_prefix="alert_sub")
+
+    if not payload.consent:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Explicit citizen consent is required to subscribe to emergency alerts."
+        )
+
+    # Server-side validation of coordinates and radius
+    if not (-90.0 <= payload.latitude <= 90.0) or not (-180.0 <= payload.longitude <= 180.0):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid coordinates. Latitude must be in [-90, 90] and Longitude in [-180, 180]."
+        )
+
+    if not (0.5 <= payload.radius_km <= 50.0):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Alert radius must be between 0.5 km and 50.0 km."
+        )
+
+    token = generate_subscriber_token()
+
+    push_endpoint = None
+    push_p256dh = None
+    push_auth = None
+
+    if payload.push_subscription:
+        push_endpoint = payload.push_subscription.endpoint
+        push_p256dh = payload.push_subscription.keys.p256dh
+        push_auth = payload.push_subscription.keys.auth
+
+    subscription = AlertSubscription(
+        subscriber_token=token,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        radius_km=payload.radius_km,
+        location_name=payload.location_name.strip() if payload.location_name else None,
+        is_active=True,
+        push_endpoint=push_endpoint,
+        push_p256dh=push_p256dh,
+        push_auth=push_auth,
+        consent_given_at=datetime.utcnow()
+    )
+    db.add(subscription)
+    db.commit()
+    db.refresh(subscription)
+
+    return {
+        "subscriber_token": subscription.subscriber_token,
+        "latitude": subscription.latitude,
+        "longitude": subscription.longitude,
+        "radius_km": subscription.radius_km,
+        "location_name": subscription.location_name,
+        "is_active": subscription.is_active,
+        "has_push": bool(subscription.push_endpoint),
+        "created_at": subscription.created_at
+    }
+
+
+@app.get("/api/alerts/subscriptions/{token}", response_model=AlertSubscriptionResponse)
+def get_subscription_details(
+    token: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Retrieve private subscription preferences for the token bearer."""
+    check_rate_limit(request, limit=30, window_seconds=60, key_prefix="alert_get_sub")
+
+    cleaned_token = token.strip()
+    if not cleaned_token:
+        raise HTTPException(status_code=400, detail="Subscription token is required.")
+
+    sub = db.query(AlertSubscription).filter(AlertSubscription.subscriber_token == cleaned_token).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Alert subscription not found.")
+
+    return {
+        "subscriber_token": sub.subscriber_token,
+        "latitude": sub.latitude,
+        "longitude": sub.longitude,
+        "radius_km": sub.radius_km,
+        "location_name": sub.location_name,
+        "is_active": sub.is_active,
+        "has_push": bool(sub.push_endpoint),
+        "created_at": sub.created_at
+    }
+
+
+@app.patch("/api/alerts/subscriptions/{token}", response_model=AlertSubscriptionResponse)
+def update_subscription_preferences(
+    token: str,
+    payload: AlertSubscriptionUpdate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Update citizen alert location, radius, or active toggle."""
+    check_rate_limit(request, limit=20, window_seconds=60, key_prefix="alert_patch_sub")
+
+    sub = db.query(AlertSubscription).filter(AlertSubscription.subscriber_token == token.strip()).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Alert subscription not found.")
+
+    if payload.latitude is not None and payload.longitude is not None:
+        if not (-90.0 <= payload.latitude <= 90.0) or not (-180.0 <= payload.longitude <= 180.0):
+            raise HTTPException(status_code=400, detail="Invalid coordinates.")
+        sub.latitude = payload.latitude
+        sub.longitude = payload.longitude
+
+    if payload.radius_km is not None:
+        if not (0.5 <= payload.radius_km <= 50.0):
+            raise HTTPException(status_code=400, detail="Radius must be between 0.5 km and 50 km.")
+        sub.radius_km = payload.radius_km
+
+    if payload.location_name is not None:
+        sub.location_name = payload.location_name.strip() or None
+
+    if payload.is_active is not None:
+        sub.is_active = payload.is_active
+
+    if payload.push_subscription:
+        sub.push_endpoint = payload.push_subscription.endpoint
+        sub.push_p256dh = payload.push_subscription.keys.p256dh
+        sub.push_auth = payload.push_subscription.keys.auth
+
+    sub.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(sub)
+
+    return {
+        "subscriber_token": sub.subscriber_token,
+        "latitude": sub.latitude,
+        "longitude": sub.longitude,
+        "radius_km": sub.radius_km,
+        "location_name": sub.location_name,
+        "is_active": sub.is_active,
+        "has_push": bool(sub.push_endpoint),
+        "created_at": sub.created_at
+    }
+
+
+@app.delete("/api/alerts/subscriptions/{token}")
+def unsubscribe_from_alerts(
+    token: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Unsubscribe and revoke emergency alert consent."""
+    check_rate_limit(request, limit=20, window_seconds=60, key_prefix="alert_del_sub")
+
+    sub = db.query(AlertSubscription).filter(AlertSubscription.subscriber_token == token.strip()).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Alert subscription not found.")
+
+    sub.is_active = False
+    sub.push_endpoint = None
+    sub.push_p256dh = None
+    sub.push_auth = None
+    sub.updated_at = datetime.utcnow()
+    db.commit()
+
+    return {
+        "message": "Successfully unsubscribed from emergency alerts.",
+        "is_active": False
+    }
+
+
+@app.get("/api/alerts/subscriber/{token}", response_model=List[SubscriberAlertItem])
+def get_subscriber_notifications(
+    token: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve in-app notifications dispatched to this subscriber within their chosen radius.
+    Sorted descending by alert time.
+    """
+    check_rate_limit(request, limit=30, window_seconds=60, key_prefix="alert_get_items")
+
+    sub = db.query(AlertSubscription).filter(AlertSubscription.subscriber_token == token.strip()).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Alert subscription not found.")
+
+    if not sub.is_active:
+        return []
+
+    dispatches = (
+        db.query(AlertDispatchLog)
+        .filter(AlertDispatchLog.subscription_id == sub.id)
+        .order_by(AlertDispatchLog.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    items = []
+    for d in dispatches:
+        alert = d.alert
+        if not alert:
+            continue
+        inc = alert.incident
+        items.append({
+            "id": d.id,
+            "alert_id": alert.id,
+            "incident_id": alert.incident_id,
+            "tracking_id": inc.tracking_id if inc else f"INC-{alert.incident_id}",
+            "category": alert.category,
+            "severity": alert.severity,
+            "priority_level": alert.priority_level,
+            "title": alert.title,
+            "approx_location": alert.approx_location,
+            "safety_instructions": alert.safety_instructions,
+            "distance_km": round(d.distance_km, 2),
+            "approved_by": alert.approved_by,
+            "created_at": alert.created_at,
+            "is_read": d.is_read
+        })
+
+    return items
+
+
+@app.post("/api/alerts/subscriber/{token}/read/{dispatch_id}")
+def mark_alert_read(
+    token: str,
+    dispatch_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Mark an in-app emergency alert as read by the subscriber."""
+    check_rate_limit(request, limit=30, window_seconds=60, key_prefix="alert_read")
+
+    sub = db.query(AlertSubscription).filter(AlertSubscription.subscriber_token == token.strip()).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Subscription not found.")
+
+    dispatch = db.query(AlertDispatchLog).filter(
+        AlertDispatchLog.id == dispatch_id,
+        AlertDispatchLog.subscription_id == sub.id
+    ).first()
+
+    if not dispatch:
+        raise HTTPException(status_code=404, detail="Notification item not found.")
+
+    dispatch.is_read = True
+    db.commit()
+    return {"message": "Notification marked as read", "id": dispatch.id, "is_read": True}
+
+
+@app.get("/api/alerts/active", response_model=List[EmergencyAlertResponse])
+def get_public_active_alerts(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Public broadcast feed of verified emergency alerts from the past 48 hours.
+    Anonymized: strictly omits reporting citizen's personal information.
+    """
+    check_rate_limit(request, limit=60, window_seconds=60, key_prefix="alert_active")
+
+    alerts = (
+        db.query(EmergencyAlert)
+        .order_by(EmergencyAlert.created_at.desc())
+        .limit(20)
+        .all()
+    )
+
+    result = []
+    for a in alerts:
+        inc = a.incident
+        result.append({
+            "id": a.id,
+            "incident_id": a.incident_id,
+            "tracking_id": inc.tracking_id if inc else f"INC-{a.incident_id}",
+            "category": a.category,
+            "severity": a.severity,
+            "priority_level": a.priority_level,
+            "latitude": a.latitude,
+            "longitude": a.longitude,
+            "approx_location": a.approx_location,
+            "title": a.title,
+            "safety_instructions": a.safety_instructions,
+            "dispatched_subscribers_count": a.dispatched_subscribers_count,
+            "approved_by": a.approved_by,
+            "created_at": a.created_at,
+            "distance_km": None
+        })
+
+    return result
+
+
+@app.post("/api/incidents/{incident_id}/approve")
+def approve_and_broadcast_incident(
+    incident_id: int,
+    payload: IncidentApprovalRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Explicit Operator Approval & Emergency Broadcast Trigger (Protected).
+    - Requires authenticated emergency operator or admin.
+    - Validates incident exists and is not 'Rejected'.
+    - Validates coordinates exist.
+    - Idempotent: safe against concurrent or repeated approval requests.
+    - DOES NOT implicitly alter operational status (status remains Reported/Assigned etc.).
+    - Finds active subscribers within their chosen radius and logs persistent dispatches.
+    - Dispatches Web Push if VAPID is configured, otherwise logs in-app delivery.
+    """
+    incident = db.query(Incident).filter(Incident.id == incident_id).first()
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident record not found.")
+
+    if incident.status == "Rejected":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot approve or broadcast alerts for a rejected incident."
+        )
+
+    # Validate incident coordinates server-side
+    if incident.latitude is None or incident.longitude is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incident coordinates are missing. Geographic alert targeting cannot be computed."
+        )
+
+    if not (-90.0 <= incident.latitude <= 90.0) or not (-180.0 <= incident.longitude <= 180.0):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incident coordinates are out of valid geographic range [-90 to 90, -180 to 180]."
+        )
+
+    # 1. Idempotency Check: if already approved/alerted, return existing record safely
+    existing_alert = db.query(EmergencyAlert).filter(EmergencyAlert.incident_id == incident.id).first()
+    if existing_alert or incident.is_verified:
+        return {
+            "message": "Incident is already verified and emergency broadcast active.",
+            "already_approved": True,
+            "alert_id": existing_alert.id if existing_alert else None,
+            "incident_id": incident.id,
+            "is_verified": incident.is_verified,
+            "verified_at": incident.verified_at,
+            "verified_by": incident.verified_by,
+            "subscribers_notified": existing_alert.dispatched_subscribers_count if existing_alert else 0
+        }
+
+    # 2. Mark incident as verified (without changing operational workflow status)
+    incident.is_verified = True
+    incident.verified_at = datetime.utcnow()
+    incident.verified_by = current_user.username
+    incident.updated_at = datetime.utcnow()
+
+    title = payload.custom_title or payload.title or f"Verified Emergency: {incident.type} in Dehradun"
+    approx_loc = payload.approx_location or f"{incident.latitude:.3f}°N, {incident.longitude:.3f}°E sector"
+    safety_info = payload.safety_instructions or get_default_safety_instructions(incident.type)
+
+    # 3. Create EmergencyAlert record
+    alert = EmergencyAlert(
+        incident_id=incident.id,
+        approved_by=current_user.username,
+        category=incident.type,
+        severity=incident.severity,
+        priority_level=incident.priority_level,
+        latitude=incident.latitude,
+        longitude=incident.longitude,
+        approx_location=approx_loc,
+        title=title,
+        safety_instructions=safety_info,
+        dispatched_subscribers_count=0
+    )
+    db.add(alert)
+    db.flush()  # assign alert.id
+
+    # 4. Log lifecycle update in incident_updates
+    update_log = IncidentUpdate(
+        incident_id=incident.id,
+        old_status=incident.status,
+        new_status=incident.status,  # Preserves workflow status!
+        changed_by=current_user.username,
+        comment=f"Operator verified incident. Broadcasted public emergency alert docket #{incident.tracking_id}."
+    )
+    db.add(update_log)
+
+    # 5. Find eligible active subscribers whose radius covers the incident location
+    active_subscribers = (
+        db.query(AlertSubscription)
+        .filter(AlertSubscription.is_active == True)
+        .all()
+    )
+
+    notified_count = 0
+    for sub in active_subscribers:
+        # Distance between subscriber location and incident location
+        dist = haversine_distance_km(
+            incident.latitude, incident.longitude,
+            sub.latitude, sub.longitude
+        )
+
+        # Send alert ONLY if subscriber's radius covers the incident location
+        if dist <= sub.radius_km:
+            # Check for existing dispatch log for idempotency
+            existing_dispatch = db.query(AlertDispatchLog).filter(
+                AlertDispatchLog.alert_id == alert.id,
+                AlertDispatchLog.subscription_id == sub.id
+            ).first()
+
+            if not existing_dispatch:
+                channel = "in-app"
+                # If subscriber provided Web Push credentials, attempt push delivery
+                if sub.push_endpoint and sub.push_p256dh and sub.push_auth:
+                    push_success = dispatch_web_push_notification(
+                        push_endpoint=sub.push_endpoint,
+                        p256dh=sub.push_p256dh,
+                        auth=sub.push_auth,
+                        payload={
+                            "title": title,
+                            "body": f"{approx_loc}: {safety_info[:140]}...",
+                            "tag": f"dects-alert-{alert.id}",
+                            "data": {
+                                "alert_id": alert.id,
+                                "incident_id": incident.id,
+                                "tracking_id": incident.tracking_id
+                            }
+                        }
+                    )
+                    if push_success:
+                        channel = "web-push"
+
+                dispatch_entry = AlertDispatchLog(
+                    alert_id=alert.id,
+                    subscription_id=sub.id,
+                    distance_km=round(dist, 2),
+                    delivery_channel=channel,
+                    delivery_status="Delivered",
+                    is_read=False
+                )
+                db.add(dispatch_entry)
+                notified_count += 1
+
+    alert.dispatched_subscribers_count = notified_count
+    db.commit()
+    db.refresh(incident)
+    db.refresh(alert)
+
+    return {
+        "message": f"Incident verified. Emergency alert dispatched to {notified_count} eligible nearby subscribers.",
+        "already_approved": False,
+        "alert_id": alert.id,
+        "incident_id": incident.id,
+        "tracking_id": incident.tracking_id,
+        "is_verified": incident.is_verified,
+        "verified_at": incident.verified_at,
+        "verified_by": incident.verified_by,
+        "subscribers_notified": notified_count,
+        "approx_location": alert.approx_location,
+        "title": alert.title
     }

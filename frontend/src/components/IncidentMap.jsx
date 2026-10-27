@@ -287,9 +287,9 @@ export default function IncidentMap({
 
       {/* Floating Tactical Legend (HUD style) */}
       {showLegend && (
-        <div className="absolute bottom-3 left-3 z-[1000] bg-[#FCFAF6]/95 backdrop-blur-md px-2.5 py-1.5 rounded-md border border-[#DFD8C8] text-[10px] font-mono text-[#5A6354] shadow-xs pointer-events-auto">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-[#343B30]">
+        <div className="absolute bottom-3 left-3 z-[1000] bg-[#FCFAF6]/95 backdrop-blur-md px-3 py-1.5 rounded-md border border-[#DFD8C8] text-[10px] font-mono text-[#5A6354] shadow-xs pointer-events-auto">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="flex items-center gap-1 text-[#343B30] font-semibold">
               <span className="w-2 h-2 rounded-full bg-[#DC2626]" /> Crit
             </span>
             <span className="flex items-center gap-1 text-[#343B30]">
@@ -300,6 +300,13 @@ export default function IncidentMap({
             </span>
             <span className="flex items-center gap-1 text-[#343B30]">
               <span className="w-2 h-2 rounded-full bg-[#16A34A]" /> Low
+            </span>
+            <span className="h-3 w-px bg-[#DFD8C8] hidden sm:block" />
+            <span className="text-[#343B30] flex items-center gap-1">
+              <span>🛟</span> Response Unit
+            </span>
+            <span className="text-[#991B1B] flex items-center gap-1 font-semibold">
+              <span>⛔</span> Blockage Zone
             </span>
           </div>
         </div>

@@ -34,5 +34,15 @@ api.interceptors.response.use(
   }
 );
 
+// --- Alert & Subscription API Endpoints ---
+export const subscribeToAlerts = (data) => api.post('/api/alerts/subscribe', data);
+export const getSubscription = (token) => api.get(`/api/alerts/subscriptions/${token}`);
+export const updateSubscription = (token, data) => api.patch(`/api/alerts/subscriptions/${token}`, data);
+export const unsubscribeAlerts = (token) => api.delete(`/api/alerts/subscriptions/${token}`);
+export const getSubscriberAlerts = (token) => api.get(`/api/alerts/subscriber/${token}`);
+export const markAlertRead = (token, dispatchId) => api.post(`/api/alerts/subscriber/${token}/read/${dispatchId}`);
+export const getActivePublicAlerts = () => api.get('/api/alerts/active');
+export const approveIncidentAndBroadcast = (incidentId, data) => api.post(`/api/incidents/${incidentId}/approve`, data);
+
 export default api;
 export { API_BASE_URL };

@@ -12,6 +12,12 @@ import {
   HeartPulse,
   LifeBuoy,
   Radio,
+  Send,
+  Navigation,
+  CheckCircle2,
+  PhoneCall,
+  BellRing,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function IncidentDetailPanel({
@@ -20,10 +26,31 @@ export default function IncidentDetailPanel({
   onClose,
   onUpdateStatus,
   onAssignTeam,
+  onUnassignTeam,
+  onApproveIncident,
   isLoadingAction
 }) {
   const [comment, setComment] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedTeamId, setSelectedTeamId] = useState('');
+  const [showDispatchSelector, setShowDispatchSelector] = useState(false);
+
+  // Emergency Alert Push/Broadcast States
+  const [showApprovalForm, setShowApprovalForm] = useState(false);
+  const [customTitle, setCustomTitle] = useState('');
+  const [customInstructions, setCustomInstructions] = useState('');
+  const [approxLocation, setApproxLocation] = useState('');
+
+  const handleApprovalSubmit = async (e) => {
+    e.preventDefault();
+    if (!incident || !onApproveIncident) return;
+    await onApproveIncident(incident.id, {
+      custom_title: customTitle.trim() || undefined,
+      approx_location: approxLocation.trim() || undefined,
+      safety_instructions: customInstructions.trim() || undefined,
+    });
+    setShowApprovalForm(false);
+  };
 
   const statusOptions = ['Reported', 'Assigned', 'In Progress', 'Resolved', 'Rejected'];
 
@@ -39,14 +66,14 @@ export default function IncidentDetailPanel({
     return (
       <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden">
         {/* Header */}
-        <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC] flex items-center justify-between">
+        <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC]/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5">
             <Radio className="w-3.5 h-3.5 text-[#16A34A]" />
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#343B30]">
               District Fleet Readiness
             </span>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#EEF2E6] text-[#343B30] border border-[#B2BCA0] font-semibold">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-sm bg-[#343B30] text-[#F5F0E5] font-bold">
             {availableCount} / {teams.length} Ready
           </span>
         </div>
@@ -54,35 +81,34 @@ export default function IncidentDetailPanel({
         {/* Guidance Notice */}
         <div className="p-3 bg-[#FCFAF6] border-b border-[#DFD8C8] text-xs text-[#5A6354] leading-relaxed">
           <p>
-            Select any incident from the <strong className="text-[#343B30]">Triage Feed</strong> or the <strong className="text-[#343B30]">Map</strong> to view Haversine unit recommendations and dispatch controls.
+            Select any incident from the <strong className="text-[#343B30]">Queue</strong> or <strong className="text-[#343B30]">Tactical Map</strong> to execute nearest-unit Haversine dispatch and status transitions.
           </p>
         </div>
 
-        {/* Fleet listing */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          <span className="text-[10px] font-mono text-[#5A6354] uppercase tracking-wider block mb-1">
-            Registered Dehradun Response Units ({teams.length})
-          </span>
+        {/* Fleet listing - Clean table rows instead of cards */}
+        <div className="flex-1 overflow-y-auto divide-y divide-[#DFD8C8]">
           {teams.map((team) => (
             <div
               key={team.id}
-              className="p-2.5 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center justify-between text-xs"
+              className="p-3 bg-[#FCFAF6] hover:bg-[#F5F0E5] transition-colors flex items-center justify-between text-xs"
             >
-              <div className="flex items-center gap-2">
-                <div className="p-1 rounded-md bg-[#FFFFFF] border border-[#DFD8C8]">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-sm bg-[#EFE9DC] border border-[#DFD8C8] text-[#343B30]">
                   {getTeamIcon(team.type)}
                 </div>
                 <div>
                   <span className="font-semibold text-xs text-[#343B30] block leading-tight">{team.name}</span>
-                  <span className="text-[10px] text-[#5A6354] capitalize">{team.type} &bull; {team.contact_number}</span>
+                  <span className="text-[10px] font-mono text-[#5A6354] capitalize">
+                    {team.type} &bull; Hotline: {team.contact_number}
+                  </span>
                 </div>
               </div>
               <span
-                className={`text-[10px] font-mono px-2 py-0.5 rounded-md border font-medium ${
+                className={`text-[9px] font-mono px-2 py-0.5 rounded-sm border uppercase font-bold ${
                   team.status === 'Available'
-                    ? 'bg-[#F0FDF4] text-[#166534] border-[#DCFCE7]'
+                    ? 'bg-[#DCFCE7] text-[#166534] border-[#86EFAC]'
                     : team.status === 'Assigned'
-                    ? 'bg-[#FFF7ED] text-[#9A3412] border-[#FFEDD5]'
+                    ? 'bg-[#FFEDD5] text-[#9A3412] border-[#FDBA74]'
                     : 'bg-[#EFE9DC] text-[#5A6354] border-[#DFD8C8]'
                 }`}
               >
@@ -106,8 +132,8 @@ export default function IncidentDetailPanel({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden">
-      {/* Header */}
+    <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden" aria-label="Incident Mission Deck">
+      {/* Flight Deck Header */}
       <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC] flex items-start justify-between gap-2 shrink-0">
         <div>
           <div className="flex items-center gap-2">
@@ -115,265 +141,424 @@ export default function IncidentDetailPanel({
               {incident.tracking_id}
             </span>
             <PriorityBadge level={incident.priority_level} score={incident.priority_score} />
+            {incident.is_verified && (
+              <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 bg-[#DCFCE7] text-[#166534] border border-[#86EFAC] rounded-sm">
+                <ShieldCheck className="w-3 h-3 text-[#166534]" /> VERIFIED
+              </span>
+            )}
           </div>
-          <h3 className="font-bold text-[#343B30] text-xs mt-1">
+          <h2 className="font-bold text-[#343B30] text-sm mt-0.5">
             {incident.type}
-          </h3>
+          </h2>
         </div>
 
         <button
           onClick={onClose}
-          className="p-1 rounded-md text-[#5A6354] hover:text-[#343B30] hover:bg-[#DFD8C8] transition-colors"
+          className="p-1 rounded text-[#5A6354] hover:text-[#343B30] hover:bg-[#DFD8C8] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#697C58]"
           title="Close incident panel"
+          aria-label="Close incident details"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
 
-      {/* Scrollable Body */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3.5 text-xs">
-        {/* Road Blockage Warning (if within 500m) */}
+      {/* Scrollable Mission Deck Content */}
+      <div className="flex-1 overflow-y-auto divide-y divide-[#DFD8C8] text-xs">
+        {/* Transit Blockage Alert Banner if within 500m */}
         {incident.nearby_blockages && incident.nearby_blockages.length > 0 && (
-          <div className="p-2.5 rounded-lg bg-[#FFF7ED] border border-[#FFEDD5] text-[#9A3412]">
+          <div className="p-3 bg-[#FEF2F2] border-b border-[#FECACA] text-[#991B1B]" role="alert">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                <span className="font-mono font-bold text-[10px] uppercase text-[#9A3412] block">
+                <span className="font-mono font-bold text-[10px] uppercase text-[#991B1B] block">
                   Transit Hazard Warning
                 </span>
-                <p className="text-[11px] text-[#7C2D12] mt-0.5 leading-tight">
-                  Within 500m of blockage ({incident.nearby_blockages.map((b) => `${b.tracking_id}`).join(', ')}). Reroute incoming responders.
+                <p className="text-[11px] text-[#991B1B] mt-0.5 leading-tight">
+                  Road blockage identified within 500m ({incident.nearby_blockages.map((b) => b.tracking_id).join(', ')}). Reroute incoming responders.
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Citizen Description */}
-        <div>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-1 font-semibold">
-            Citizen Situation Log
+        {/* Section 1: Ground Description */}
+        <div className="p-3.5 space-y-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block font-bold">
+            Field Observation Log
           </span>
-          <p className="text-[#343B30] bg-[#FCFAF6] p-2.5 rounded-lg border border-[#DFD8C8] leading-relaxed text-xs">
+          <p className="text-[#343B30] bg-[#FFFFFF] p-2.5 rounded border border-[#DFD8C8] leading-relaxed text-xs">
             {incident.description}
           </p>
         </div>
 
-        {/* Telemetry Metrics Grid */}
-        <div className="grid grid-cols-2 gap-2 text-[11px]">
-          <div className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center gap-2">
-            <Users className="w-3.5 h-3.5 text-[#697C58]" />
-            <div>
-              <span className="text-[#5A6354] text-[10px] block font-mono">People Affected</span>
-              <span className="font-mono font-bold text-[#343B30]">{incident.people_affected}</span>
+        {/* Section 2: Technical Telemetry Key-Value Grid */}
+        <div className="p-3.5 space-y-2">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block font-bold">
+            Operational Telemetry
+          </span>
+          <div className="border border-[#DFD8C8] rounded divide-y divide-[#DFD8C8] bg-[#FFFFFF] text-xs font-mono">
+            <div className="p-2 flex items-center justify-between">
+              <span className="text-[#5A6354] flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-[#7C8775]" /> People Impacted
+              </span>
+              <span className="font-bold text-[#343B30]">{incident.people_affected} civilian(s)</span>
             </div>
-          </div>
-          <div className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5 text-[#CF806B]" />
-            <div>
-              <span className="text-[#5A6354] text-[10px] block font-mono">Vulnerable Group</span>
-              <span className="font-bold text-[#343B30]">{incident.vulnerable_involved ? 'Yes (+15)' : 'No'}</span>
+            <div className="p-2 flex items-center justify-between">
+              <span className="text-[#5A6354] flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-[#7C8775]" /> Vulnerable Factor
+              </span>
+              <span className={`font-bold ${incident.vulnerable_involved ? 'text-[#DC2626]' : 'text-[#343B30]'}`}>
+                {incident.vulnerable_involved ? 'Present (+15 Triage Weight)' : 'None'}
+              </span>
             </div>
-          </div>
-          <div className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center gap-2">
-            <MapPin className="w-3.5 h-3.5 text-[#697C58]" />
-            <div>
-              <span className="text-[#5A6354] text-[10px] block font-mono">Coordinates</span>
-              <span className="font-mono text-[10px] text-[#343B30]">{incident.latitude?.toFixed(4)}, {incident.longitude?.toFixed(4)}</span>
+            <div className="p-2 flex items-center justify-between">
+              <span className="text-[#5A6354] flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#7C8775]" /> Logged At
+              </span>
+              <span className="text-[#343B30]">
+                {incident.created_at
+                  ? new Date(incident.created_at).toLocaleString([], {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : 'N/A'}
+              </span>
             </div>
-          </div>
-          <div className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-[#7C8775]" />
-            <div>
-              <span className="text-[#5A6354] text-[10px] block font-mono">Status</span>
-              <span className="font-bold text-[#343B30]">{incident.status}</span>
+            <div className="p-2 flex items-center justify-between">
+              <span className="text-[#5A6354] flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#7C8775]" /> Coordinates
+              </span>
+              <span className="text-[#697C58] font-bold">
+                {incident.latitude?.toFixed(4)}, {incident.longitude?.toFixed(4)}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Photo attachment if available */}
+        {/* Section 3: Citizen Field Photo Evidence */}
         {incident.photo_url && (
-          <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-1 font-semibold">
-              Attached Citizen Evidence
+          <div className="p-3.5 space-y-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block font-bold">
+              Citizen Photo Evidence
             </span>
-            <a
-              href={`${API_BASE_URL}${incident.photo_url}`}
-              target="_blank"
-              rel="noreferrer"
-              className="block overflow-hidden rounded-lg border border-[#DFD8C8] max-h-36 bg-[#EFE9DC]"
-            >
+            <div className="rounded border border-[#DFD8C8] overflow-hidden bg-[#EFE9DC]">
               <img
                 src={`${API_BASE_URL}${incident.photo_url}`}
-                alt="Site photo"
-                className="w-full h-32 object-cover hover:scale-105 transition-transform"
+                alt="Evidence"
+                className="w-full h-36 object-cover"
               />
-            </a>
+              <div className="p-1.5 bg-[#FFFFFF] text-[10px] font-mono text-[#7C8775]">
+                Attached to Incident #{incident.tracking_id}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Priority Formula Calculation Breakdown */}
-        <div className="p-2.5 rounded-lg bg-[#EFE9DC] border border-[#DFD8C8]">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] font-semibold">
-              Priority Formula Breakdown
-            </span>
-            <span className="font-mono text-[10px] font-bold text-[#697C58]">
-              {incident.priority_score} pts
+        {/* Section 4: Public Emergency Alert Broadcast & Push Notification */}
+        <div className="p-3.5 space-y-3 bg-[#FCFAF6] border-b border-[#DFD8C8]">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[#343B30] font-bold flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#697C58]" />
+              <span>Public Emergency Alert &amp; Push Notification</span>
             </span>
           </div>
 
-          <div className="space-y-1 font-mono text-[11px] text-[#5A6354]">
-            <div className="flex justify-between py-0.5 border-b border-[#DFD8C8]">
-              <span>Severity ({breakdown.severity_input || incident.severity} &times; 10)</span>
-              <span className="text-[#343B30]">+{breakdown.severity_score ?? (incident.severity * 10)}</span>
+          {incident.is_verified ? (
+            <div className="p-3 rounded bg-[#DCFCE7]/60 border border-[#86EFAC] text-xs font-mono space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#166534] flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                  <span>VERIFIED &amp; BROADCAST ACTIVE</span>
+                </span>
+                <span className="text-[10px] text-[#166534]">
+                  {incident.verified_at ? new Date(incident.verified_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                </span>
+              </div>
+              <p className="text-[11px] text-[#14532D]">
+                Verified by authorized operator <strong>{incident.verified_by}</strong>. Emergency notifications pushed to nearby citizens.
+              </p>
+              {incident.alert && (
+                <div className="pt-1.5 border-t border-[#86EFAC]/60 text-[10px] text-[#166534] flex items-center justify-between">
+                  <span>Subscribers Alerted: <strong>{incident.alert.dispatched_subscribers_count}</strong></span>
+                  <span className="truncate max-w-[150px]">{incident.alert.approx_location}</span>
+                </div>
+              )}
             </div>
-            <div className="flex justify-between py-0.5 border-b border-[#DFD8C8]">
-              <span>People Affected</span>
-              <span className="text-[#343B30]">+{breakdown.people_score ?? Math.min(incident.people_affected, 20)}</span>
+          ) : incident.status === 'Rejected' ? (
+            <div className="p-2.5 rounded bg-[#FEF2F2] border border-[#FECACA] text-[11px] font-mono text-[#991B1B]">
+              Incident has been rejected. Public alerts cannot be broadcasted for rejected records.
             </div>
-            <div className="flex justify-between py-0.5 border-b border-[#DFD8C8]">
-              <span>Vulnerable Factor</span>
-              <span className="text-[#343B30]">+{breakdown.vulnerable_score ?? (incident.vulnerable_involved ? 15 : 0)}</span>
-            </div>
-            <div className="flex justify-between py-0.5 border-b border-[#DFD8C8]">
-              <span>Type Weight ({incident.type})</span>
-              <span className="text-[#343B30]">+{breakdown.type_score ?? 2}</span>
-            </div>
-          </div>
-        </div>
+          ) : (
+            <div className="p-3 rounded bg-[#FFFFFF] border border-[#DFD8C8] space-y-2.5">
+              <p className="text-[11px] text-[#5A6354] leading-relaxed">
+                Broadcast official emergency warnings and push notifications to citizens subscribed within geographic radius. Operational status remains <span className="font-bold text-[#343B30] font-mono">[{incident.status}]</span>.
+              </p>
 
-        {/* Nearest Suitable Response Units (Haversine Distance) */}
-        {incident.status !== 'Resolved' && incident.status !== 'Rejected' && (
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] font-semibold">
-                Nearest Available ({incident.suitable_type})
-              </span>
-              <span className="text-[10px] font-mono text-[#697C58] font-bold">Haversine GIS</span>
-            </div>
+              {!showApprovalForm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowApprovalForm(true)}
+                  disabled={isLoadingAction}
+                  className="w-full py-2 px-3 rounded bg-[#697C58] hover:bg-[#576748] text-white font-mono font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <BellRing className="w-3.5 h-3.5" />
+                  <span>Verify Incident &amp; Send Push / In-App Alert</span>
+                </button>
+              ) : (
+                <form onSubmit={handleApprovalSubmit} className="space-y-2 pt-2 border-t border-[#DFD8C8]">
+                  <div>
+                    <label className="text-[10px] font-mono text-[#5A6354] block font-bold mb-1">
+                      Custom Alert Headline (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder={`Verified Emergency: ${incident.type} in Dehradun`}
+                      value={customTitle}
+                      onChange={(e) => setCustomTitle(e.target.value)}
+                      className="w-full text-xs font-mono rounded border border-[#DFD8C8] p-1.5 bg-[#FFFFFF] text-[#343B30] focus:outline-none focus:border-[#697C58]"
+                    />
+                  </div>
 
-            {incident.nearest_available_teams && incident.nearest_available_teams.length > 0 ? (
-              <div className="space-y-1.5">
-                {incident.nearest_available_teams.map((team) => (
-                  <div
-                    key={team.id}
-                    className="p-2 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8] hover:border-[#697C58] transition-colors flex items-center justify-between gap-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded-md bg-[#FFFFFF] border border-[#DFD8C8]">
-                        {getTeamIcon(team.type)}
-                      </div>
-                      <div>
-                        <span className="font-semibold text-xs text-[#343B30] block leading-tight">{team.name}</span>
-                        <span className="text-[10px] text-[#697C58] font-mono font-medium">{team.distance_km} km away</span>
-                      </div>
-                    </div>
+                  <div>
+                    <label className="text-[10px] font-mono text-[#5A6354] block font-bold mb-1">
+                      Approximate Sector / Locality (No private addresses)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Near Rajpur Road / Jakhan Sector"
+                      value={approxLocation}
+                      onChange={(e) => setApproxLocation(e.target.value)}
+                      className="w-full text-xs font-mono rounded border border-[#DFD8C8] p-1.5 bg-[#FFFFFF] text-[#343B30] focus:outline-none focus:border-[#697C58]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-mono text-[#5A6354] block font-bold mb-1">
+                      Public Safety Advisory
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Leave blank for automatic municipal safety guidance..."
+                      value={customInstructions}
+                      onChange={(e) => setCustomInstructions(e.target.value)}
+                      className="w-full text-xs font-mono rounded border border-[#DFD8C8] p-1.5 bg-[#FFFFFF] text-[#343B30] focus:outline-none focus:border-[#697C58]"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
                     <button
-                      onClick={() => onAssignTeam(incident.id, team.id)}
+                      type="submit"
                       disabled={isLoadingAction}
-                      className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#697C58] hover:bg-[#576748] text-white transition-colors shrink-0 disabled:opacity-50 shadow-xs"
+                      className="flex-1 py-2 px-3 rounded bg-[#697C58] hover:bg-[#576748] text-white font-mono font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
                     >
-                      Dispatch
+                      <BellRing className="w-3.5 h-3.5" />
+                      <span>{isLoadingAction ? 'Broadcasting...' : 'Confirm & Send Alert'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowApprovalForm(false)}
+                      className="px-3 py-2 rounded bg-[#EFE9DC] hover:bg-[#DFD8C8] text-[#5A6354] text-xs font-mono"
+                    >
+                      Cancel
                     </button>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-[#5A6354] italic p-2 bg-[#FCFAF6] rounded-lg border border-[#DFD8C8]">
-                No available {incident.suitable_type} units in range.
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Assigned Units */}
-        {incident.assigned_resources && incident.assigned_resources.length > 0 && (
-          <div className="p-2.5 rounded-lg bg-[#EFE9DC] border border-[#DFD8C8]">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-1.5 font-semibold">
-              Assigned Emergency Units ({incident.assigned_resources.length})
-            </span>
-            <div className="space-y-1">
-              {incident.assigned_resources.map((res) => (
-                <div key={res.id} className="flex items-center justify-between p-1.5 rounded-md bg-[#FCFAF6] border border-[#DFD8C8] text-xs">
-                  <div className="flex items-center gap-1.5">
-                    {getTeamIcon(res.type)}
-                    <span className="font-semibold text-[#343B30] text-xs">{res.name}</span>
-                  </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-[#EEF2E6] text-[#343B30] border border-[#B2BCA0] font-medium">
-                    Deployed
-                  </span>
-                </div>
-              ))}
+                </form>
+              )}
             </div>
-          </div>
-        )}
-
-        {/* Transition Status Form */}
-        <div className="p-2.5 rounded-lg bg-[#FCFAF6] border border-[#DFD8C8]">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-1.5 font-semibold">
-            Commit Status Transition
-          </span>
-          <form onSubmit={handleStatusChangeSubmit} className="space-y-2">
-            <div className="flex gap-1.5">
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="flex-1 text-xs rounded-lg border border-[#DFD8C8] p-1.5 bg-[#FFFFFF] text-[#343B30] focus:outline-none focus:border-[#697C58]"
-              >
-                <option value="">Next Status...</option>
-                {statusOptions.map((st) => (
-                  <option key={st} value={st} disabled={st === incident.status}>
-                    {st} {st === incident.status ? '(Current)' : ''}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                disabled={!selectedStatus || isLoadingAction}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#697C58] hover:bg-[#576748] text-white transition-colors disabled:opacity-50 shadow-xs"
-              >
-                Commit
-              </button>
-            </div>
-            <input
-              type="text"
-              placeholder="Operational action notes..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full text-xs rounded-lg border border-[#DFD8C8] p-1.5 bg-[#FFFFFF] text-[#343B30] placeholder-[#7C8775] focus:outline-none focus:border-[#697C58]"
-            />
-          </form>
+          )}
         </div>
 
-        {/* Audit Log */}
-        <div>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block mb-2 font-semibold">
-            Dispatch Audit Log
-          </span>
-          <div className="relative pl-3.5 border-l border-[#DFD8C8] space-y-2">
-            {incident.updates && incident.updates.length > 0 ? (
-              incident.updates.map((update) => (
-                <div key={update.id} className="relative">
-                  <div className="absolute -left-[18px] top-1 w-2 h-2 rounded-full bg-[#697C58]" />
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-xs text-[#343B30]">{update.new_status}</span>
-                      <span className="text-[10px] font-mono text-[#5A6354]">
-                        {new Date(update.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+        {/* Section 5: Response Team Dispatch Control (Ambulance / Fire / Rescue) */}
+        {(() => {
+          const assignedTeams = incident.assigned_resources || [];
+          const assignedIds = new Set(assignedTeams.map((r) => r.id));
+          const availableFleet = teams.filter(
+            (t) => !assignedIds.has(t.id) && t.status === 'Available'
+          );
+
+          return (
+            <div className="p-3.5 space-y-3 bg-[#FCFAF6] border-b border-[#DFD8C8]">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#343B30] font-bold flex items-center gap-1.5">
+                  <Radio className="w-3.5 h-3.5 text-[#697C58]" />
+                  <span>Team Dispatch Decision</span>
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#EEF2E6] text-[#455239] border border-[#BAC7AF]">
+                  {assignedTeams.length > 0 ? `${assignedTeams.length} Dispatched` : 'Standby / None'}
+                </span>
+              </div>
+
+              {/* Current Active Dispatches (with Recall option) */}
+              {assignedTeams.length > 0 ? (
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-mono text-[#5A6354] uppercase font-bold block">
+                    Actively Assigned Response Units:
+                  </span>
+                  {assignedTeams.map((assigned) => (
+                    <div
+                      key={assigned.id}
+                      className="p-2.5 rounded bg-[#DCFCE7]/70 border border-[#86EFAC] flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded bg-[#BBF7D0] text-[#166534]">
+                          {getTeamIcon(assigned.type)}
+                        </div>
+                        <div>
+                          <span className="font-semibold text-xs text-[#14532D] block leading-tight">
+                            {assigned.name}
+                          </span>
+                          <span className="text-[10px] font-mono text-[#166534] capitalize">
+                            {assigned.type} &bull; Hotline: {assigned.contact || assigned.contact_number || '+91-135-EMERGENCY'}
+                          </span>
+                        </div>
+                      </div>
+                      {onUnassignTeam && (
+                        <button
+                          type="button"
+                          onClick={() => onUnassignTeam(incident.id, assigned.id)}
+                          disabled={isLoadingAction}
+                          className="px-2 py-1 rounded bg-[#FEE2E2] hover:bg-[#FECACA] text-[#991B1B] text-[10px] font-mono font-bold uppercase transition-colors shrink-0"
+                          title="Recall this unit and mark Available"
+                        >
+                          Recall Unit
+                        </button>
+                      )}
                     </div>
-                    {update.comment && (
-                      <p className="text-[11px] text-[#5A6354]">{update.comment}</p>
-                    )}
-                    <span className="text-[10px] text-[#7C8775] font-mono">By: {update.changed_by}</span>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-2.5 rounded bg-[#F5F0E5] border border-[#DFD8C8] text-xs font-mono text-[#5A6354]">
+                  <span className="font-bold text-[#343B30] block">No Units Dispatched</span>
+                  <span className="text-[10px] text-[#7C8775]">
+                    Standby evaluation &bull; Field team dispatch is optional.
+                  </span>
+                </div>
+              )}
+
+              {/* Decision: Whether to dispatch or keep on standby */}
+              {!showDispatchSelector ? (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowDispatchSelector(true)}
+                    disabled={isLoadingAction || availableFleet.length === 0}
+                    className="w-full py-2 px-3 rounded bg-[#697C58] hover:bg-[#576748] text-white font-mono font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    <span>
+                      {availableFleet.length === 0
+                        ? 'No Fleet Units Available'
+                        : '+ Select & Dispatch a Response Team'}
+                    </span>
+                  </button>
+                </div>
+              ) : (
+                <div className="p-3 rounded bg-[#FFFFFF] border border-[#BAC7AF] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#343B30]">
+                      Pick Which Team to Dispatch:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDispatchSelector(false);
+                        setSelectedTeamId('');
+                      }}
+                      className="text-[10px] font-mono text-[#7C8775] hover:text-[#DC2626]"
+                    >
+                      Cancel (Standby)
+                    </button>
+                  </div>
+
+                  <div>
+                    <select
+                      value={selectedTeamId}
+                      onChange={(e) => setSelectedTeamId(e.target.value)}
+                      className="w-full text-xs font-mono rounded border border-[#DFD8C8] p-2 bg-[#FCFAF6] text-[#343B30] focus:outline-none focus:border-[#697C58]"
+                    >
+                      <option value="">-- Choose team to dispatch --</option>
+                      {availableFleet.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          [{t.type.toUpperCase()}] {t.name} (Hotline: {t.contact_number})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={!selectedTeamId || isLoadingAction}
+                      onClick={() => {
+                        if (selectedTeamId && onAssignTeam) {
+                          onAssignTeam(incident.id, Number(selectedTeamId));
+                          setSelectedTeamId('');
+                          setShowDispatchSelector(false);
+                        }
+                      }}
+                      className="flex-1 py-2 px-3 rounded bg-[#16A34A] hover:bg-[#15803D] text-white font-mono font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-40"
+                    >
+                      Confirm Dispatch
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDispatchSelector(false);
+                        setSelectedTeamId('');
+                      }}
+                      className="px-3 py-2 rounded bg-[#EFE9DC] hover:bg-[#DFD8C8] text-[#5A6354] text-xs font-mono"
+                    >
+                      Do Not Dispatch
+                    </button>
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-xs text-[#7C8775] italic">No audit records.</p>
-            )}
-          </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Section 5: Status Transition Action Controls */}
+        <div className="p-3.5 space-y-2.5 bg-[#EFE9DC]/30">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block font-bold">
+            Commit Status Transition
+          </span>
+
+          <form onSubmit={handleStatusChangeSubmit} className="space-y-2">
+            <div className="grid grid-cols-2 gap-1.5">
+              {statusOptions.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setSelectedStatus(opt)}
+                  className={`py-1.5 px-2 text-xs font-mono rounded border transition-colors ${
+                    selectedStatus === opt || (!selectedStatus && incident.status === opt)
+                      ? 'bg-[#343B30] text-[#F5F0E5] font-bold border-[#343B30]'
+                      : 'bg-[#FFFFFF] text-[#5A6354] border-[#DFD8C8] hover:bg-[#F5F0E5]'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              rows={2}
+              placeholder="Operator lifecycle notes (optional)..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full text-xs font-mono rounded bg-[#FFFFFF] border border-[#DFD8C8] p-2 text-[#343B30] placeholder-[#7C8775] focus:outline-none focus:border-[#697C58]"
+            />
+
+            <button
+              type="submit"
+              disabled={isLoadingAction || !selectedStatus || selectedStatus === incident.status}
+              className="w-full py-2 px-3 rounded bg-[#697C58] hover:bg-[#576748] text-white font-mono font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Update Lifecycle State</span>
+            </button>
+          </form>
         </div>
       </div>
     </div>

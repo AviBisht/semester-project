@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 
 # --- Auth Schemas ---
@@ -81,6 +81,9 @@ class IncidentResponse(BaseModel):
     priority_level: str
     score_breakdown: Optional[str] = None
     status: str
+    is_verified: bool = False
+    verified_at: Optional[datetime] = None
+    verified_by: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     updates: Optional[List[IncidentUpdateLog]] = []
@@ -89,6 +92,87 @@ class IncidentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- Emergency Alert & Subscription Schemas ---
+
+class PushSubscriptionKeys(BaseModel):
+    p256dh: str = Field(..., min_length=1, max_length=255)
+    auth: str = Field(..., min_length=1, max_length=255)
+
+class PushSubscriptionPayload(BaseModel):
+    endpoint: str = Field(..., min_length=5, max_length=2000)
+    keys: PushSubscriptionKeys
+
+class AlertSubscriptionCreate(BaseModel):
+    latitude: float = Field(..., ge=-90.0, le=90.0, description="Latitude between -90 and 90")
+    longitude: float = Field(..., ge=-180.0, le=180.0, description="Longitude between -180 and 180")
+    radius_km: float = Field(default=5.0, ge=0.5, le=50.0, description="Alert radius in kilometers (0.5km to 50km)")
+    location_name: Optional[str] = Field(default=None, max_length=255)
+    consent: bool = Field(..., description="Citizen explicit voluntary consent to receive emergency alerts")
+    push_subscription: Optional[PushSubscriptionPayload] = None
+
+class AlertSubscriptionUpdate(BaseModel):
+    latitude: Optional[float] = Field(default=None, ge=-90.0, le=90.0)
+    longitude: Optional[float] = Field(default=None, ge=-180.0, le=180.0)
+    radius_km: Optional[float] = Field(default=None, ge=0.5, le=50.0)
+    location_name: Optional[str] = Field(default=None, max_length=255)
+    is_active: Optional[bool] = None
+    push_subscription: Optional[PushSubscriptionPayload] = None
+
+class AlertSubscriptionResponse(BaseModel):
+    subscriber_token: str
+    latitude: float
+    longitude: float
+    radius_km: float
+    location_name: Optional[str] = None
+    is_active: bool
+    has_push: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class IncidentApprovalRequest(BaseModel):
+    custom_title: Optional[str] = Field(default=None, max_length=255, description="Custom advisory headline for the alert")
+    title: Optional[str] = Field(default=None, max_length=255, description="Alternate alias for custom advisory headline")
+    approx_location: Optional[str] = Field(default=None, max_length=255, description="Anonymized approximate public locality (e.g. Near Rajpur Road)")
+    safety_instructions: Optional[str] = Field(default=None, max_length=2000, description="Public safety instructions and advisories")
+
+class EmergencyAlertResponse(BaseModel):
+    id: int
+    incident_id: int
+    tracking_id: Optional[str] = None
+    category: str
+    severity: int
+    priority_level: str
+    latitude: float
+    longitude: float
+    approx_location: Optional[str] = None
+    title: str
+    safety_instructions: Optional[str] = None
+    dispatched_subscribers_count: int
+    approved_by: str
+    created_at: datetime
+    distance_km: Optional[float] = None
+
+    class Config:
+        from_attributes = True
+
+class SubscriberAlertItem(BaseModel):
+    id: int
+    alert_id: int
+    incident_id: int
+    tracking_id: str
+    category: str
+    severity: int
+    priority_level: str
+    title: str
+    approx_location: Optional[str] = None
+    safety_instructions: Optional[str] = None
+    distance_km: float
+    approved_by: str
+    created_at: datetime
+    is_read: bool
 
 # --- Analytics Schemas ---
 class AnalyticsResponse(BaseModel):
@@ -103,3 +187,5 @@ class AnalyticsResponse(BaseModel):
     incidents_by_type: List[dict]
     available_resources_count: int
     total_resources_count: int
+    verified_incidents_count: Optional[int] = 0
+    active_subscribers_count: Optional[int] = 0
