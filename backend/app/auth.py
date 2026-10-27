@@ -11,8 +11,6 @@ from .models import User
 
 logger = logging.getLogger(__name__)
 
-# JWT Config: Load secret key from environment variable
-# JWT configuration
 ENVIRONMENT = os.environ.get("ENV", "development").lower()
 SECRET_KEY = os.environ.get("SECRET_KEY", "")
 
@@ -26,7 +24,7 @@ elif not SECRET_KEY:
     SECRET_KEY = "local-development-only-insecure-secret"
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 

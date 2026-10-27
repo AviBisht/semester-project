@@ -40,18 +40,15 @@ export default function OperatorLoginPage() {
 
   return (
     <div className="flex-1 min-h-[calc(100vh-3.5rem)] grid grid-cols-1 lg:grid-cols-12 bg-[#F5F0E5]">
-      {/* Left Column: Full-Height Regional Imagery & Municipal Context (5 cols) */}
       <div className="lg:col-span-5 relative min-h-[260px] lg:min-h-full overflow-hidden bg-[#343B30] flex flex-col justify-between p-6 sm:p-10 text-[#F5F0E5]">
         <img
           src="/dehradun_aerial.jpg"
           alt="Aerial view of Dehradun valley and lush green Himalayan foothills"
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
-        {/* Deep atmospheric overlay */}
         <div className="absolute inset-0 bg-[#343B30]/75 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#343B30] via-[#343B30]/40 to-transparent" />
 
-        {/* Top Header Badge */}
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm bg-[#343B30]/90 backdrop-blur-md border border-white/20 text-xs font-mono tracking-wider">
             <Radio className="w-3.5 h-3.5 text-[#86EFAC] animate-pulse" />
@@ -59,7 +56,6 @@ export default function OperatorLoginPage() {
           </div>
         </div>
 
-        {/* Bottom Contextual Narrative */}
         <div className="relative z-10 max-w-sm mt-12 lg:mt-0">
           <span className="text-[10px] font-mono uppercase tracking-widest text-[#BAC7AF] font-bold block mb-1">
             District Operational Security
@@ -73,7 +69,6 @@ export default function OperatorLoginPage() {
         </div>
       </div>
 
-      {/* Right Column: High-Integrity Security Gate (7 cols) */}
       <div className="lg:col-span-7 flex flex-col justify-center px-6 sm:px-12 lg:px-20 py-12 bg-[#FCFAF6] border-l border-[#DFD8C8]">
         <div className="max-w-md w-full mx-auto space-y-6">
           <div>

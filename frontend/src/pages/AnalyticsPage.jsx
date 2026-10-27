@@ -64,7 +64,6 @@ export default function AnalyticsPage() {
 
   return (
     <div className="flex-1 w-full bg-[#F5F0E5] text-[#343B30] pb-20">
-      {/* 1. Executive Report Header */}
       <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -91,7 +90,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* 2. Editorial Metric Wall (No Cards! Pure editorial typography and hairlines) */}
       <div className="border-b border-[#DFD8C8] bg-[#FCFAF6]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#DFD8C8]">
           <div className="p-6 sm:p-8">
@@ -144,10 +142,8 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* 3. Analytical Report Body (Structured split data layout) */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <div className="border border-[#DFD8C8] bg-[#FCFAF6] rounded-sm overflow-hidden">
-          {/* Section Masthead */}
           <div className="p-4 sm:p-5 border-b border-[#DFD8C8] bg-[#EFE9DC]/70 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-[#697C58]" />
@@ -160,9 +156,7 @@ export default function AnalyticsPage() {
             </span>
           </div>
 
-          {/* Split Chart & Table View */}
           <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#DFD8C8]">
-            {/* Left: Recharts Bar Visualization (7 cols) */}
             <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between">
               <div>
                 <span className="text-xs font-mono uppercase tracking-wider text-[#5A6354] font-bold block mb-6">
@@ -235,7 +229,6 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Right: Tabular Matrix (5 cols) */}
             <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between">
               <div>
                 <span className="text-xs font-mono uppercase tracking-wider text-[#5A6354] font-bold block mb-4">

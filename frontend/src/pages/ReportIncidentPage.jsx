@@ -51,7 +51,6 @@ export default function ReportIncidentPage() {
   const [submittedReport, setSubmittedReport] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Emergency Alert Subscription States
   const [alertRadius, setAlertRadius] = useState(5);
   const [hasConsent, setHasConsent] = useState(false);
   const [isSubscribingAlerts, setIsSubscribingAlerts] = useState(false);
@@ -182,7 +181,6 @@ export default function ReportIncidentPage() {
 
   return (
     <div className="flex-1 w-full bg-[#F5F0E5] text-[#343B30]">
-      {/* Emergency Hotline Ticker */}
       <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
         <div className="flex items-center gap-2 text-[#5A6354]">
           <span className="w-2 h-2 rounded-full bg-[#CF806B]" aria-hidden="true" />
@@ -199,7 +197,6 @@ export default function ReportIncidentPage() {
       </div>
 
       {submittedReport ? (
-        /* Clearance Docket / Confirmation Receipt */
         <div className="max-w-xl mx-auto px-4 py-12">
           <div className="bg-[#FCFAF6] border border-[#DFD8C8] rounded-xl overflow-hidden shadow-subtle">
             <div className="p-6 bg-[#EFE9DC] border-b border-[#DFD8C8] text-center">
@@ -231,7 +228,6 @@ export default function ReportIncidentPage() {
                 </div>
               </div>
 
-              {/* Voluntary Dismissible Emergency Alert Subscription */}
               {!alertSubDismissed && (
                 <div className="p-4 rounded-lg bg-[#EEF2E6] border border-[#BAC7AF] space-y-3">
                   <div className="flex items-start justify-between gap-2">
@@ -352,10 +348,8 @@ export default function ReportIncidentPage() {
           </div>
         </div>
       ) : (
-        /* Asymmetric Operational Intake Studio */
         <form onSubmit={handleSubmit} className="w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-6.5rem)]">
-            {/* Left Column (5 cols): Incident Specification Form */}
             <div className="lg:col-span-5 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r border-[#DFD8C8] bg-[#FCFAF6] space-y-6 overflow-y-auto">
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#343B30]">
@@ -373,7 +367,6 @@ export default function ReportIncidentPage() {
                 </div>
               )}
 
-              {/* Section 01: Category */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between border-b border-[#DFD8C8] pb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold">
@@ -405,7 +398,6 @@ export default function ReportIncidentPage() {
                 </div>
               </div>
 
-              {/* Section 02: Description */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between border-b border-[#DFD8C8] pb-1">
                   <label htmlFor="incident-description" className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold">
@@ -423,7 +415,6 @@ export default function ReportIncidentPage() {
                 />
               </div>
 
-              {/* Section 03: Risk Assessment */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-[#DFD8C8] pb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold">
@@ -512,7 +503,6 @@ export default function ReportIncidentPage() {
                 </div>
               </div>
 
-              {/* Section 04: Photo Evidence */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between border-b border-[#DFD8C8] pb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold">
@@ -551,9 +541,7 @@ export default function ReportIncidentPage() {
               </div>
             </div>
 
-            {/* Right Column (7 cols): Geographic Spatial Pin Locator */}
             <div className="lg:col-span-7 flex flex-col bg-[#FCFAF6]">
-              {/* Map Locator Masthead */}
               <div className="p-3 bg-[#EFE9DC] border-b border-[#DFD8C8] flex flex-wrap items-center justify-between gap-2 shrink-0">
                 <div>
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#343B30] block">
@@ -586,7 +574,6 @@ export default function ReportIncidentPage() {
                 </div>
               </div>
 
-              {/* Inline error notice if submitted without pin */}
               {locationError && (
                 <div className="p-2.5 bg-[#FEF2F2] border-b border-[#FECACA] text-[#991B1B] text-xs font-mono flex items-center gap-2 px-4" role="alert">
                   <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" aria-hidden="true" />
@@ -594,7 +581,6 @@ export default function ReportIncidentPage() {
                 </div>
               )}
 
-              {/* Full-Height Leaflet Canvas */}
               <div className="flex-1 min-h-[380px] relative bg-[#E8E2D4]">
                 <IncidentMap
                   center={[30.3165, 78.0322]}
@@ -605,7 +591,6 @@ export default function ReportIncidentPage() {
                 />
               </div>
 
-              {/* Bottom Transmission Bar */}
               <div className="p-3.5 bg-[#FCFAF6] border-t border-[#DFD8C8] flex flex-wrap items-center justify-between gap-3 shrink-0">
                 <div className="text-[11px] font-mono text-[#5A6354]">
                   {latitude && longitude ? (

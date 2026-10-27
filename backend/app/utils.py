@@ -15,16 +15,13 @@ def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) ->
     Returns:
         Distance in kilometers (float rounded to 2 decimal places).
     """
-    # Earth radius in kilometers
     EARTH_RADIUS_KM = 6371.0
 
-    # Convert degrees to radians
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
     delta_phi = math.radians(lat2 - lat1)
     delta_lambda = math.radians(lon2 - lon1)
 
-    # Apply Haversine formula
     a = (math.sin(delta_phi / 2.0) ** 2 +
          math.cos(phi1) * math.cos(phi2) *
          math.sin(delta_lambda / 2.0) ** 2)
@@ -63,7 +60,6 @@ def check_blockage_proximity(incident_lat: float, incident_lon: float, blockages
     """
     nearby_blockages = []
     for blockage in blockages:
-        # Distance in km converted to meters
         dist_km = haversine_distance_km(incident_lat, incident_lon, blockage.latitude, blockage.longitude)
         dist_meters = dist_km * 1000.0
 

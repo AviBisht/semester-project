@@ -9,13 +9,11 @@ import { RefreshCw, Radio, CloudRain, AlertTriangle } from 'lucide-react';
 export default function OperatorDashboard() {
   const navigate = useNavigate();
 
-  // Primary Data States
   const [incidents, setIncidents] = useState([]);
   const [teams, setTeams] = useState([]);
   const [blockages, setBlockages] = useState([]);
   const [weather, setWeather] = useState(null);
 
-  // Selection & UI States
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
@@ -24,13 +22,11 @@ export default function OperatorDashboard() {
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState(new Date());
 
-  // Mobile view switcher: 'feed' | 'map' | 'deck'
   const [mobileTab, setMobileTab] = useState('map');
 
   const selectedIncidentIdRef = useRef(null);
   selectedIncidentIdRef.current = selectedIncident?.id;
 
-  // Protect route
   useEffect(() => {
     const token = localStorage.getItem('operator_token');
     if (!token) {
@@ -38,7 +34,6 @@ export default function OperatorDashboard() {
     }
   }, [navigate]);
 
-  // Fetch all dashboard data
   const fetchData = async (isBackground = false) => {
     if (!isBackground) setIsRefreshing(true);
 
@@ -61,13 +56,11 @@ export default function OperatorDashboard() {
       setWeather(weatherRes.data);
       setLastRefreshedAt(new Date());
 
-      // If an incident was selected, refresh its details
       if (selectedIncidentIdRef.current) {
         try {
           const detailRes = await api.get(`/api/incidents/${selectedIncidentIdRef.current}`);
           setSelectedIncident(detailRes.data);
         } catch {
-          // If deleted or not found
         }
       }
     } catch (err) {
@@ -99,7 +92,6 @@ export default function OperatorDashboard() {
       setIsLoadingAction(true);
       const res = await api.get(`/api/incidents/${incidentSummary.id}`);
       setSelectedIncident(res.data);
-      // On mobile, auto-switch to deck tab when an item is selected
       if (window.innerWidth < 1024) {
         setMobileTab('deck');
       }
@@ -173,7 +165,6 @@ export default function OperatorDashboard() {
     }
   };
 
-  // Metrics
   const activeCount = incidents.filter((i) => ['Reported', 'Assigned', 'In Progress'].includes(i.status)).length;
   const criticalCount = incidents.filter((i) => i.priority_level === 'Critical').length;
   const assignedCount = incidents.filter((i) => ['Assigned', 'In Progress'].includes(i.status)).length;
@@ -182,9 +173,7 @@ export default function OperatorDashboard() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full overflow-hidden bg-[#F5F0E5]">
-      {/* 1. Operational Masthead & Telemetry Command Ribbon */}
       <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0">
-        {/* Page Title & Operational Context */}
         <div className="flex items-center gap-3">
           <h1 className="text-xs sm:text-sm font-bold tracking-tight text-[#343B30] flex items-center gap-2 font-mono uppercase">
             <Radio className="w-3.5 h-3.5 text-[#16A34A] animate-pulse shrink-0" aria-hidden="true" />
@@ -194,7 +183,6 @@ export default function OperatorDashboard() {
             District Grid [30.3165°N, 78.0322°E]
           </span>
 
-          {/* Integrated Compact Meteorological Summary */}
           {weather && (
             <div className="hidden lg:flex items-center gap-2 border-l border-[#DFD8C8] pl-2.5 text-[11px] font-mono text-[#5A6354]">
               <div className="flex items-center gap-1">
@@ -218,7 +206,6 @@ export default function OperatorDashboard() {
           )}
         </div>
 
-        {/* Real-time Triage Summary Ribbon & Sync */}
         <div className="flex items-center gap-2 font-mono text-xs">
           <div className="flex items-center divide-x divide-[#DFD8C8] bg-[#EFE9DC]/60 border border-[#DFD8C8] rounded text-[11px] overflow-hidden">
             <span className="px-2.5 py-1 text-[#343B30]">
@@ -247,7 +234,6 @@ export default function OperatorDashboard() {
         </div>
       </div>
 
-      {/* Mobile Tab Switcher (<lg screens) */}
       <nav aria-label="Dashboard Panels" className="flex lg:hidden bg-[#FCFAF6] border-b border-[#DFD8C8] p-1 justify-around text-xs font-mono">
         <button
           onClick={() => setMobileTab('feed')}
@@ -275,9 +261,7 @@ export default function OperatorDashboard() {
         </button>
       </nav>
 
-      {/* 2. Tri-Pane Integrated Cockpit Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Pane: Triage Feed (320px) */}
         <div
           className={`w-full lg:w-[320px] shrink-0 h-full ${
             mobileTab === 'feed' ? 'block' : 'hidden lg:block'
@@ -294,7 +278,6 @@ export default function OperatorDashboard() {
           />
         </div>
 
-        {/* Center Pane: Full-Height GIS Tactical Map Canvas */}
         <div
           className={`flex-1 h-full relative ${
             mobileTab === 'map' ? 'block' : 'hidden lg:block'
@@ -310,7 +293,6 @@ export default function OperatorDashboard() {
           />
         </div>
 
-        {/* Right Pane: Persistent Mission Deck (380px) */}
         <div
           className={`w-full lg:w-[380px] shrink-0 h-full ${
             mobileTab === 'deck' ? 'block' : 'hidden lg:block'

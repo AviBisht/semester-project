@@ -1,5 +1,3 @@
-// Notification utilities for DECTS
-
 const SUBSCRIBER_TOKEN_KEY = 'dects_subscriber_token';
 const SUBSCRIBER_COORDS_KEY = 'dects_subscriber_coords';
 

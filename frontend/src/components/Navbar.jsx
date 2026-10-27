@@ -24,14 +24,12 @@ export default function Navbar() {
         const unread = res.data?.filter((a) => !a.is_read)?.length || 0;
         setUnreadCount(unread);
       } catch (err) {
-        // quiet fallback
       }
     } else {
       try {
         const res = await getActivePublicAlerts();
         setUnreadCount(res.data?.length || 0);
       } catch (err) {
-        // quiet fallback
       }
     }
   };
@@ -59,7 +57,6 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 bg-[#FCFAF6] border-b border-[#DFD8C8]">
       <div className="w-full px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
-          {/* Brand Identity / Dehradun Municipal Operations Emblem */}
           <Link to="/" className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#697C58] rounded-md">
             <div className="w-8 h-8 rounded-md bg-[#EEF2E6] border border-[#BAC7AF] flex items-center justify-center p-1.5 transition-colors group-hover:border-[#697C58] shrink-0" aria-hidden="true">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" className="w-full h-full">
@@ -88,7 +85,6 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Center Navigation Links - Operational Document Navigation */}
           <nav aria-label="Platform Sections" className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
@@ -111,14 +107,12 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Right Action: Operational Status & Auth & Alerts */}
           <div className="flex items-center gap-2.5">
             <div className="hidden lg:flex items-center gap-1.5 text-[11px] font-mono text-[#5A6354] border-r border-[#DFD8C8] pr-3 mr-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse" aria-hidden="true" />
               <span>Grid Online</span>
             </div>
 
-            {/* Verified Emergency Alerts Notification Bell */}
             <button
               type="button"
               onClick={() => setIsAlertDrawerOpen(true)}
@@ -163,7 +157,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile nav bar */}
       <nav aria-label="Mobile Navigation" className="flex md:hidden border-t border-[#DFD8C8] bg-[#FCFAF6] px-2 py-1.5 justify-around text-xs">
         {navLinks.map((link) => {
           const Icon = link.icon;
@@ -184,7 +177,6 @@ export default function Navbar() {
         })}
       </nav>
 
-      {/* Emergency Alerts Drawer */}
       <AlertNotificationDrawer
         isOpen={isAlertDrawerOpen}
         onClose={() => setIsAlertDrawerOpen(false)}

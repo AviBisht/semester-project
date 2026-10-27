@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Any, Dict
 from datetime import datetime
 
-# --- Auth Schemas ---
 class LoginRequest(BaseModel):
     username: str = Field(..., min_length=1, max_length=100, description="Operator username")
     password: str = Field(..., min_length=1, max_length=256, description="Operator password")
@@ -22,7 +21,6 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# --- Incident Schemas ---
 class IncidentCreate(BaseModel):
     type: str = Field(..., min_length=2, max_length=100)  # Flooding/Waterlogging, Fire, Road Accident, Medical Emergency, Road Blockage, Other
     description: str = Field(..., min_length=1, max_length=5000)
@@ -92,8 +90,6 @@ class IncidentResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-# --- Emergency Alert & Subscription Schemas ---
 
 class PushSubscriptionKeys(BaseModel):
     p256dh: str = Field(..., min_length=1, max_length=255)
@@ -174,7 +170,6 @@ class SubscriberAlertItem(BaseModel):
     created_at: datetime
     is_read: bool
 
-# --- Analytics Schemas ---
 class AnalyticsResponse(BaseModel):
     total_incidents: int
     active_incidents: int

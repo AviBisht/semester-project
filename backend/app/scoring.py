@@ -22,7 +22,6 @@ Priority Thresholds:
     - Low: < 25
 """
 
-# Weight dictionary according to specifications
 TYPE_WEIGHTS = {
     "Medical Emergency": 10,
     "Fire": 10,
@@ -39,7 +38,7 @@ def calculate_priority_score(severity: int, people_affected: int, vulnerable_inv
     Returns:
         tuple (score: int, priority_level: str, breakdown: dict)
     """
-    # 1. Severity component (severity scale 1-5 multiplied by 10)
+    # 1. Severity component (scale 1-5 multiplied by 10)
     severity_clamped = max(1, min(5, int(severity or 1)))
     severity_score = severity_clamped * 10
 
@@ -47,16 +46,14 @@ def calculate_priority_score(severity: int, people_affected: int, vulnerable_inv
     people_count = max(0, int(people_affected or 0))
     people_score = min(people_count, 20)
 
-    # 3. Vulnerable individuals component (+15 points if elderly/children/disabled involved)
+    # 3. Vulnerable individuals component (+15 points if involved)
     vulnerable_score = 15 if bool(vulnerable_involved) else 0
 
-    # 4. Incident type severity weight
+    # 4. Incident type weight
     type_score = TYPE_WEIGHTS.get(incident_type, 2)
 
-    # Total score calculation
     total_score = severity_score + people_score + vulnerable_score + type_score
 
-    # Determine priority tier based on criteria
     if total_score >= 60:
         priority_level = "Critical"
     elif total_score >= 40:
@@ -66,7 +63,6 @@ def calculate_priority_score(severity: int, people_affected: int, vulnerable_inv
     else:
         priority_level = "Low"
 
-    # Breakdown dictionary for display on detail panel
     breakdown = {
         "severity_input": severity_clamped,
         "severity_score": severity_score,

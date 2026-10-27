@@ -18,7 +18,6 @@ export default function WeatherBanner({ weather }) {
       }`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        {/* Left: Indicator & Message */}
         <div className="flex items-center gap-2">
           <div
             className={`p-1 rounded shrink-0 ${
@@ -48,7 +47,6 @@ export default function WeatherBanner({ weather }) {
           </div>
         </div>
 
-        {/* Right: Metrics readout */}
         <div className="flex items-center gap-3 sm:gap-4 text-[11px] text-[#5A6354] shrink-0 border-t sm:border-t-0 border-[#DFD8C8]/60 pt-1 sm:pt-0">
           <div className="flex items-center gap-1">
             <span>Temp:</span>

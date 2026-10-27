@@ -14,18 +14,14 @@ function App() {
         <Navbar />
         <main className="flex-1 flex flex-col">
           <Routes>
-            {/* Public citizen routes */}
             <Route path="/" element={<ReportIncidentPage />} />
             <Route path="/track" element={<TrackReportPage />} />
 
-            {/* Operator portal routes */}
             <Route path="/operator/login" element={<OperatorLoginPage />} />
             <Route path="/operator/dashboard" element={<OperatorDashboard />} />
 
-            {/* Analytics */}
             <Route path="/analytics" element={<AnalyticsPage />} />
 
-            {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

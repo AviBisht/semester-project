@@ -59,7 +59,6 @@ export default function IncidentTable({
 
   return (
     <div className="flex flex-col h-full bg-[#FCFAF6] border-r border-[#DFD8C8]">
-      {/* Triage Queue Control Bar */}
       <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC]/70 space-y-2.5 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -83,7 +82,6 @@ export default function IncidentTable({
           </button>
         </div>
 
-        {/* Search input with accessible label */}
         <div>
           <label htmlFor="triage-search" className="sr-only">
             Search incidents by tracking ID, type, or description
@@ -98,7 +96,6 @@ export default function IncidentTable({
           />
         </div>
 
-        {/* Operational Filter Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto text-[10px] font-mono pb-0.5" role="toolbar" aria-label="Incident Filters">
           {['All', 'Reported', 'Assigned', 'Resolved'].map((st) => (
             <button
@@ -130,7 +127,6 @@ export default function IncidentTable({
         </div>
       </div>
 
-      {/* Incident List Rows (Dense operational queue layout) */}
       <div className="flex-1 overflow-y-auto divide-y divide-[#DFD8C8]">
         {sortedIncidents.length === 0 ? (
           <div className="p-8 text-center text-xs font-mono text-[#7C8775] italic">
@@ -156,7 +152,6 @@ export default function IncidentTable({
                     : 'bg-[#FCFAF6] border-l-transparent hover:bg-[#F5F0E5]'
                 }`}
               >
-                {/* Header row: Tracking ID + Critical Tag + Status */}
                 <div className="flex items-center justify-between gap-1 mb-1">
                   <div className="flex items-center gap-1.5">
                     <span className="font-mono font-bold text-xs text-[#343B30]">
@@ -178,7 +173,6 @@ export default function IncidentTable({
                   </span>
                 </div>
 
-                {/* Incident Type & Location Coordinates */}
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="font-semibold text-[#343B30] truncate">
                     {incident.type}
@@ -188,12 +182,10 @@ export default function IncidentTable({
                   </span>
                 </div>
 
-                {/* Ground situation snippet */}
                 <p className="text-[11px] text-[#5A6354] line-clamp-1 leading-snug">
                   {incident.description}
                 </p>
 
-                {/* Metadata Ledger Bar */}
                 <div className="flex items-center justify-between text-[10px] text-[#7C8775] font-mono mt-2 pt-1 border-t border-[#DFD8C8]/60">
                   <span className="flex items-center gap-1 text-[#5A6354]">
                     <Clock className="w-2.5 h-2.5" aria-hidden="true" />

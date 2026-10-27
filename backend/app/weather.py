@@ -45,7 +45,6 @@ def get_weather_forecast():
             code = current.get("weather_code", 0)
             wind = current.get("wind_speed_10m", 5.0)
 
-            # Weather code interpretation
             weather_desc = "Clear / Fair"
             if code in [1, 2, 3]:
                 weather_desc = "Partly Cloudy"

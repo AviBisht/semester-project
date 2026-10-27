@@ -107,7 +107,6 @@ export default function TrackReportPage() {
 
   return (
     <div className="flex-1 w-full bg-[#F5F0E5] text-[#343B30] pb-16">
-      {/* 1. Public Search Header Bar */}
       <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-2 mb-2">
@@ -123,7 +122,6 @@ export default function TrackReportPage() {
             Enter your official 8-character Incident Tracking ID to track real-time dispatch milestones, responding team contacts, and municipal audit history.
           </p>
 
-          {/* Large Focused Lookup Input */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -164,7 +162,6 @@ export default function TrackReportPage() {
             </button>
           </form>
 
-          {/* Quick chip suggestions if not searching */}
           <div className="mt-3 flex items-center gap-2 text-[11px] font-mono text-[#7C8775]">
             <span>Quick Query Examples:</span>
             {['INC-2AD0', 'INC-7491'].map((id) => (
@@ -184,7 +181,6 @@ export default function TrackReportPage() {
         </div>
       </div>
 
-      {/* Error Notice */}
       {errorMessage && (
         <div className="max-w-4xl mx-auto px-4 mt-6">
           <div
@@ -197,10 +193,8 @@ export default function TrackReportPage() {
         </div>
       )}
 
-      {/* 2. Official Incident Dispatch Docket */}
       {incidentData && (
         <main className="max-w-5xl mx-auto px-4 sm:px-6 mt-8 space-y-8">
-          {/* A. Massive Status Hero Banner */}
           {(() => {
             const hero = renderStatusHero(incidentData.status);
             return (
@@ -223,7 +217,6 @@ export default function TrackReportPage() {
                     </div>
                   </div>
 
-                  {/* Identification Pill */}
                   <div className="bg-black/20 p-4 rounded-md border border-white/15 font-mono shrink-0 text-left md:text-right">
                     <span className="text-[10px] text-white/70 block uppercase">Docket Number</span>
                     <span className="text-2xl font-bold text-white tracking-wide block">
@@ -238,7 +231,6 @@ export default function TrackReportPage() {
             );
           })()}
 
-          {/* B. Stepped Milestone Progression Pipeline */}
           <div className="bg-[#FCFAF6] border-y sm:border border-[#DFD8C8] sm:rounded-lg p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#DFD8C8]">
               <span className="text-xs font-mono uppercase tracking-wider text-[#343B30] font-bold">
@@ -291,16 +283,13 @@ export default function TrackReportPage() {
             </div>
           </div>
 
-          {/* C. Two-Column Detailed Ledger Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Column: Official Incident Factsheet (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
               <div>
                 <span className="text-xs font-mono uppercase tracking-wider text-[#343B30] font-bold block pb-2 border-b border-[#DFD8C8]">
                   Incident Registry Particulars
                 </span>
 
-                {/* Ground description callout */}
                 <div className="mt-4 bg-[#FCFAF6] border-l-4 border-[#697C58] p-4 text-xs text-[#343B30] leading-relaxed">
                   <span className="font-mono text-[10px] uppercase text-[#697C58] font-bold block mb-1">
                     Hazard Classification: {incidentData.type}
@@ -309,7 +298,6 @@ export default function TrackReportPage() {
                 </div>
               </div>
 
-              {/* Data Table rows with hairlines */}
               <div className="border border-[#DFD8C8] bg-[#FCFAF6] divide-y divide-[#DFD8C8] text-xs font-mono">
                 <div className="p-3 flex items-center justify-between">
                   <span className="text-[#5A6354] flex items-center gap-2">
@@ -356,7 +344,6 @@ export default function TrackReportPage() {
                 </div>
               </div>
 
-              {/* Citizen Photo Attachment */}
               {incidentData.photo_url && (
                 <div className="pt-2">
                   <span className="text-xs font-mono uppercase tracking-wider text-[#343B30] font-bold block mb-2">
@@ -376,9 +363,7 @@ export default function TrackReportPage() {
               )}
             </div>
 
-            {/* Right Column: Responding Team & Audit Trail (5 cols) */}
             <div className="lg:col-span-5 space-y-6">
-              {/* Assigned Team Banner */}
               <div>
                 <span className="text-xs font-mono uppercase tracking-wider text-[#343B30] font-bold block pb-2 border-b border-[#DFD8C8]">
                   Assigned Emergency Response Unit
@@ -429,7 +414,6 @@ export default function TrackReportPage() {
                 )}
               </div>
 
-              {/* Official Audit Lifecycle Log */}
               <div>
                 <span className="text-xs font-mono uppercase tracking-wider text-[#343B30] font-bold block pb-2 border-b border-[#DFD8C8]">
                   Official Incident Audit Trail

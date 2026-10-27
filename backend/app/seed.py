@@ -10,7 +10,6 @@ def seed_database(db: Session):
     Seeds initial operator user, ~10 emergency response teams in Dehradun,
     and a few sample incidents (including a Road Blockage) if tables are empty.
     """
-    # 1. Seed / Update Operator Account
     operator_user = db.query(User).filter(User.username == "operator").first()
 
     op_password = os.environ.get("OPERATOR_PASSWORD", "")
@@ -33,7 +32,6 @@ def seed_database(db: Session):
         db.commit()
         print("[SEED] Updated operator password from environment")
 
-    # 2. Seed Emergency Response Teams around Dehradun, Uttarakhand
     # Coordinates centered around Dehradun valley (~30.3165 N, 78.0322 E)
     if db.query(Resource).count() == 0:
         teams_data = [
@@ -124,7 +122,6 @@ def seed_database(db: Session):
         db.commit()
         print(f"[SEED] Seeded {len(teams_data)} response teams across Dehradun.")
 
-    # 3. Seed initial sample incidents if none exist
     if db.query(Incident).count() == 0:
         sample_incidents = [
             {
@@ -197,7 +194,6 @@ def seed_database(db: Session):
             db.add(inc)
             db.flush()
 
-            # Add initial update entry
             upd = IncidentUpdate(
                 incident_id=inc.id,
                 old_status=None,

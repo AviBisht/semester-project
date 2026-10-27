@@ -29,7 +29,7 @@ function MapRecenter({ center, zoom }) {
 }
 
 function createIncidentMarkerIcon(priorityLevel, isSelected = false) {
-  let color = '#16A34A'; // Low
+  let color = '#16A34A';
 
   if (priorityLevel === 'Critical') {
     color = '#DC2626';
@@ -187,7 +187,6 @@ export default function IncidentMap({
           </Marker>
         )}
 
-        {/* Road Blockage Zones (300m radius) */}
         {blockages.map((blockage) => (
           <Circle
             key={`blockage-${blockage.id}`}
@@ -213,7 +212,6 @@ export default function IncidentMap({
           </Circle>
         ))}
 
-        {/* Teams Markers */}
         {teams.map((team) => (
           <Marker
             key={`team-${team.id}`}
@@ -239,7 +237,6 @@ export default function IncidentMap({
           </Marker>
         ))}
 
-        {/* Incidents Markers */}
         {incidents.map((incident) => {
           const isSelected = selectedIncident && selectedIncident.id === incident.id;
           return (
@@ -285,7 +282,6 @@ export default function IncidentMap({
         })}
       </MapContainer>
 
-      {/* Floating Tactical Legend (HUD style) */}
       {showLegend && (
         <div className="absolute bottom-3 left-3 z-[1000] bg-[#FCFAF6]/95 backdrop-blur-md px-3 py-1.5 rounded-md border border-[#DFD8C8] text-[10px] font-mono text-[#5A6354] shadow-xs pointer-events-auto">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

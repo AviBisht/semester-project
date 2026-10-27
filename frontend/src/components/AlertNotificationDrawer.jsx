@@ -39,7 +39,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
   const [isLoading, setIsLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
 
-  // Voluntary subscription form states (if user has no token)
   const [subLat, setSubLat] = useState(30.3165);
   const [subLng, setSubLng] = useState(78.0322);
   const [subRadius, setSubRadius] = useState(5);
@@ -53,7 +52,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
     setActionMessage('');
     try {
       if (subscriberToken) {
-        // 1. Fetch subscriber notifications
         const [alertRes, subRes] = await Promise.all([
           getSubscriberAlerts(subscriberToken).catch(() => ({ data: [] })),
           getSubscription(subscriberToken).catch(() => ({ data: null })),
@@ -61,11 +59,9 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
         setAlerts(alertRes.data || []);
         setSubscription(subRes.data);
 
-        // Update unread count callback
         const unread = (alertRes.data || []).filter((a) => !a.is_read).length;
         if (onUnreadCountChange) onUnreadCountChange(unread);
       } else {
-        // Fetch active public broadcasts
         const publicRes = await getActivePublicAlerts().catch(() => ({ data: [] }));
         setPublicAlerts(publicRes.data || []);
         if (onUnreadCountChange) onUnreadCountChange(0);
@@ -163,7 +159,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
       <div className="w-full max-w-md bg-[#FCFAF6] border-l border-[#DFD8C8] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
-        {/* Drawer Header */}
         <div className="p-4 bg-[#EFE9DC] border-b border-[#DFD8C8] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded bg-[#FCFAF6] border border-[#BAC7AF] text-[#697C58]">
@@ -188,7 +183,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
           </button>
         </div>
 
-        {/* Tab Switcher */}
         <div className="flex border-b border-[#DFD8C8] bg-[#FCFAF6] text-xs font-mono shrink-0">
           <button
             onClick={() => setActiveTab('alerts')}
@@ -212,7 +206,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
           </button>
         </div>
 
-        {/* Toast / Notification Banner */}
         {actionMessage && (
           <div className="p-2.5 bg-[#DCFCE7] border-b border-[#86EFAC] text-[#166534] text-xs font-mono flex items-center gap-2 shrink-0">
             <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
@@ -220,10 +213,8 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
           </div>
         )}
 
-        {/* Drawer Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs font-mono">
           {activeTab === 'alerts' ? (
-            /* TAB 1: ALERTS FEED */
             subscriberToken ? (
               alerts.length === 0 ? (
                 <div className="text-center py-12 text-[#7C8775] space-y-2">
@@ -295,7 +286,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
                 </div>
               )
             ) : (
-              /* Public fallback if not subscribed yet */
               <div className="space-y-4">
                 <div className="p-3 bg-[#EEF2E6] border border-[#BAC7AF] rounded">
                   <span className="font-bold text-xs text-[#343B30] block mb-1">
@@ -337,7 +327,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
               </div>
             )
           ) : (
-            /* TAB 2: SUBSCRIPTION SETTINGS */
             subscriberToken && subscription ? (
               <div className="space-y-4">
                 <div className="p-3.5 bg-[#FFFFFF] border border-[#DFD8C8] rounded space-y-2.5">
@@ -372,7 +361,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
                   </div>
                 </div>
 
-                {/* Adjust Radius */}
                 <div className="p-3.5 bg-[#FCFAF6] border border-[#DFD8C8] rounded space-y-2">
                   <span className="text-[10px] uppercase tracking-wider text-[#5A6354] font-bold block">
                     Change Alert Radius
@@ -394,7 +382,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
                   </div>
                 </div>
 
-                {/* Unsubscribe Button */}
                 <div className="pt-2">
                   <button
                     onClick={handleUnsubscribe}
@@ -409,7 +396,6 @@ export default function AlertNotificationDrawer({ isOpen, onClose, onUnreadCount
                 </div>
               </div>
             ) : (
-              /* If no subscription, show setup form */
               <form onSubmit={handleCreateSubscription} className="space-y-3.5">
                 <div className="p-3 bg-[#EEF2E6] border border-[#BAC7AF] rounded">
                   <span className="font-bold text-xs text-[#343B30] block mb-1">

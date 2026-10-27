@@ -2,12 +2,10 @@ import uvicorn
 import os
 import sys
 
-# Ensure backend folder is in Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 backend_path = os.path.join(current_dir, "backend")
 sys.path.insert(0, backend_path)
 
-# Load local environment variables from backend/.env
 from dotenv import load_dotenv
 load_dotenv(os.path.join(backend_path, ".env"))
 

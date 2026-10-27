@@ -39,11 +39,9 @@ from .alerts import (
     dispatch_web_push_notification
 )
 
-# Run safe SQLite schema migrations & create tables
 run_migrations(engine)
 Base.metadata.create_all(bind=engine)
 
-# Ensure upload directory exists
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -53,10 +51,6 @@ app = FastAPI(
     description="Backend API for emergency reporting, operator dashboard, and response dispatch",
     version="1.0.0"
 )
-
-# ----------------------------------------------------
-# SECURITY HEADERS & APPLICATION HARDENING
-# ----------------------------------------------------
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
@@ -127,7 +121,6 @@ def check_rate_limit(
     _rate_limit_records[bucket_key] = timestamps
 
 
-# Configure CORS using explicitly allowed frontend origins
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "").strip()
 
 if not allowed_origins_env:
@@ -154,10 +147,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static folder for uploaded incident photos
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# Run DB seeding on startup
 @app.on_event("startup")
 def on_startup():
     db = next(get_db())
@@ -166,9 +157,6 @@ def on_startup():
     finally:
         db.close()
 
-# ----------------------------------------------------
-# 1. AUTHENTICATION (Operators Only)
-# ----------------------------------------------------
 
 @app.post("/api/auth/login", response_model=TokenResponse)
 def login(creds: LoginRequest, request: Request, db: Session = Depends(get_db)):
@@ -193,9 +181,6 @@ def get_me(current_user: User = Depends(get_current_user)):
     """Retrieve profile of the currently logged-in operator."""
     return current_user
 
-# ----------------------------------------------------
-# 2. CITIZEN PUBLIC ENDPOINTS (No Login Required)
-# ----------------------------------------------------
 
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -332,7 +317,6 @@ def report_incident(data: IncidentCreate, request: Request, db: Session = Depend
     """
     check_rate_limit(request, limit=15, window_seconds=60, key_prefix="report")
 
-    # 1. Compute priority score and breakdown using exact project formula
     score, level, breakdown = calculate_priority_score(
         severity=data.severity,
         people_affected=data.people_affected,
@@ -340,11 +324,9 @@ def report_incident(data: IncidentCreate, request: Request, db: Session = Depend
         incident_type=data.type
     )
 
-    # 2. Generate a citizen-friendly tracking ID like INC-8392
     short_uuid = uuid.uuid4().hex[:4].upper()
     tracking_id = f"INC-{short_uuid}"
 
-    # 3. Create incident record
     incident = Incident(
         tracking_id=tracking_id,
         type=data.type,
@@ -363,7 +345,6 @@ def report_incident(data: IncidentCreate, request: Request, db: Session = Depend
     db.add(incident)
     db.flush()
 
-    # 4. Log initial lifecycle update in incident_updates
     initial_log = IncidentUpdate(
         incident_id=incident.id,
         old_status=None,
@@ -399,10 +380,8 @@ def track_incident(identifier: str, db: Session = Depends(get_db)):
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found with the provided Tracking ID")
 
-    # Fetch updates ordered by timestamp
     updates = db.query(IncidentUpdate).filter(IncidentUpdate.incident_id == incident.id).order_by(IncidentUpdate.created_at.asc()).all()
 
-    # Fetch active assignment if any
     active_assignment = db.query(Assignment).filter(
         Assignment.incident_id == incident.id,
         Assignment.status == "Active"
@@ -444,10 +423,6 @@ def track_incident(identifier: str, db: Session = Depends(get_db)):
         ]
     }
 
-# ----------------------------------------------------
-# 3. OPERATOR DASHBOARD & INCIDENT MANAGEMENT
-# ----------------------------------------------------
-
 @app.get("/api/incidents")
 def list_incidents(
     status_filter: Optional[str] = Query(None, alias="status"),
@@ -471,7 +446,6 @@ def list_incidents(
 
     incidents = query.order_by(Incident.created_at.desc()).all()
 
-    # Pre-fetch active assignments
     result = []
     for inc in incidents:
         active_assignments = db.query(Assignment).filter(
@@ -522,12 +496,10 @@ def get_incident_detail(
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
 
-    # 1. Timeline updates
     updates = db.query(IncidentUpdate).filter(
         IncidentUpdate.incident_id == incident.id
     ).order_by(IncidentUpdate.created_at.desc()).all()
 
-    # 2. Active assignments
     active_assignments = db.query(Assignment).filter(
         Assignment.incident_id == incident.id,
         Assignment.status == "Active"
@@ -543,14 +515,12 @@ def get_incident_detail(
         for a in active_assignments if a.resource
     ]
 
-    # 3. 3 Nearest AVAILABLE teams of suitable type
     suitable_type = get_suitable_resource_type(incident.type)
     available_resources = db.query(Resource).filter(
         Resource.type == suitable_type,
         Resource.status == "Available"
     ).all()
 
-    # Calculate Haversine distance for each available candidate
     candidates = []
     for res in available_resources:
         dist = haversine_distance_km(incident.latitude, incident.longitude, res.latitude, res.longitude)
@@ -565,11 +535,9 @@ def get_incident_detail(
             "distance_km": dist
         })
 
-    # Sort ascending by distance and take top 3
     candidates.sort(key=lambda x: x["distance_km"])
     nearest_teams = candidates[:3]
 
-    # 4. Check for active road blockages within 500m
     active_blockages = db.query(Incident).filter(
         Incident.type == "Road Blockage",
         Incident.status.notin_(["Resolved", "Rejected"]),
@@ -583,7 +551,6 @@ def get_incident_detail(
         threshold_meters=500.0
     )
 
-    # Parse breakdown JSON
     breakdown_data = {}
     if incident.score_breakdown:
         try:
@@ -664,7 +631,6 @@ def update_incident_status(
     incident.status = new_status
     incident.updated_at = datetime.utcnow()
 
-    # Log in incident_updates
     log_entry = IncidentUpdate(
         incident_id=incident.id,
         old_status=old_status,
@@ -674,7 +640,6 @@ def update_incident_status(
     )
     db.add(log_entry)
 
-    # If resolved or rejected, free any assigned resources
     if new_status in ["Resolved", "Rejected"]:
         active_assignments = db.query(Assignment).filter(
             Assignment.incident_id == incident.id,
@@ -721,10 +686,8 @@ def assign_resource_to_incident(
     if resource.status != "Available":
         raise HTTPException(status_code=400, detail=f"Resource {resource.name} is currently {resource.status}")
 
-    # Set resource status to Assigned
     resource.status = "Assigned"
 
-    # Create assignment record
     assignment = Assignment(
         incident_id=incident.id,
         resource_id=resource.id,
@@ -733,13 +696,11 @@ def assign_resource_to_incident(
     )
     db.add(assignment)
 
-    # Set incident status to Assigned if currently Reported
     old_status = incident.status
     if incident.status == "Reported":
         incident.status = "Assigned"
         incident.updated_at = datetime.utcnow()
 
-    # Log in incident_updates
     update_log = IncidentUpdate(
         incident_id=incident.id,
         old_status=old_status,
@@ -792,7 +753,6 @@ def unassign_resource_from_incident(
     assignment.released_at = datetime.utcnow()
     resource.status = "Available"
 
-    # Check remaining active assignments
     remaining = db.query(Assignment).filter(
         Assignment.incident_id == incident.id,
         Assignment.status == "Active"
@@ -820,10 +780,6 @@ def unassign_resource_from_incident(
         "incident_status": incident.status
     }
 
-# ----------------------------------------------------
-# 4. RESOURCES & TEAMS
-# ----------------------------------------------------
-
 @app.get("/api/resources", response_model=List[ResourceSchema])
 def list_resources(
     type_filter: Optional[str] = Query(None, alias="type"),
@@ -835,10 +791,6 @@ def list_resources(
     if type_filter and type_filter != "All":
         query = query.filter(Resource.type == type_filter)
     return query.all()
-
-# ----------------------------------------------------
-# 5. WEATHER & ROAD BLOCKAGES
-# ----------------------------------------------------
 
 @app.get("/api/weather")
 def get_weather():
@@ -874,10 +826,6 @@ def get_road_blockages(
         for b in blockages
     ]
 
-# ----------------------------------------------------
-# 6. ANALYTICS (Single Bar Chart + Counts)
-# ----------------------------------------------------
-
 @app.get("/api/analytics", response_model=AnalyticsResponse)
 def get_analytics(
     db: Session = Depends(get_db),
@@ -899,7 +847,6 @@ def get_analytics(
     medium = db.query(Incident).filter(Incident.priority_level == "Medium").count()
     low = db.query(Incident).filter(Incident.priority_level == "Low").count()
 
-    # Incidents grouped by type
     type_counts = (
         db.query(Incident.type, func.count(Incident.id))
         .group_by(Incident.type)
@@ -911,7 +858,6 @@ def get_analytics(
         for t, c in type_counts
     ]
 
-    # Ensure all canonical incident types are present in list for clean chart
     all_types = [
         "Flooding/Waterlogging",
         "Fire",
@@ -947,10 +893,6 @@ def get_analytics(
     }
 
 
-# ----------------------------------------------------
-# 7. EMERGENCY ALERTS & VOLUNTARY SUBSCRIPTIONS
-# ----------------------------------------------------
-
 @app.post("/api/alerts/subscribe", response_model=AlertSubscriptionResponse)
 def subscribe_to_alerts(
     payload: AlertSubscriptionCreate,
@@ -970,7 +912,6 @@ def subscribe_to_alerts(
             detail="Explicit citizen consent is required to subscribe to emergency alerts."
         )
 
-    # Server-side validation of coordinates and radius
     if not (-90.0 <= payload.latitude <= 90.0) or not (-180.0 <= payload.longitude <= 180.0):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -1278,7 +1219,6 @@ def approve_and_broadcast_incident(
             detail="Cannot approve or broadcast alerts for a rejected incident."
         )
 
-    # Validate incident coordinates server-side
     if incident.latitude is None or incident.longitude is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -1291,7 +1231,6 @@ def approve_and_broadcast_incident(
             detail="Incident coordinates are out of valid geographic range [-90 to 90, -180 to 180]."
         )
 
-    # 1. Idempotency Check: if already approved/alerted, return existing record safely
     existing_alert = db.query(EmergencyAlert).filter(EmergencyAlert.incident_id == incident.id).first()
     if existing_alert or incident.is_verified:
         return {
@@ -1305,7 +1244,6 @@ def approve_and_broadcast_incident(
             "subscribers_notified": existing_alert.dispatched_subscribers_count if existing_alert else 0
         }
 
-    # 2. Mark incident as verified (without changing operational workflow status)
     incident.is_verified = True
     incident.verified_at = datetime.utcnow()
     incident.verified_by = current_user.username
@@ -1315,7 +1253,6 @@ def approve_and_broadcast_incident(
     approx_loc = payload.approx_location or f"{incident.latitude:.3f}°N, {incident.longitude:.3f}°E sector"
     safety_info = payload.safety_instructions or get_default_safety_instructions(incident.type)
 
-    # 3. Create EmergencyAlert record
     alert = EmergencyAlert(
         incident_id=incident.id,
         approved_by=current_user.username,
@@ -1332,7 +1269,6 @@ def approve_and_broadcast_incident(
     db.add(alert)
     db.flush()  # assign alert.id
 
-    # 4. Log lifecycle update in incident_updates
     update_log = IncidentUpdate(
         incident_id=incident.id,
         old_status=incident.status,
@@ -1342,7 +1278,6 @@ def approve_and_broadcast_incident(
     )
     db.add(update_log)
 
-    # 5. Find eligible active subscribers whose radius covers the incident location
     active_subscribers = (
         db.query(AlertSubscription)
         .filter(AlertSubscription.is_active == True)
@@ -1351,15 +1286,12 @@ def approve_and_broadcast_incident(
 
     notified_count = 0
     for sub in active_subscribers:
-        # Distance between subscriber location and incident location
         dist = haversine_distance_km(
             incident.latitude, incident.longitude,
             sub.latitude, sub.longitude
         )
 
-        # Send alert ONLY if subscriber's radius covers the incident location
         if dist <= sub.radius_km:
-            # Check for existing dispatch log for idempotency
             existing_dispatch = db.query(AlertDispatchLog).filter(
                 AlertDispatchLog.alert_id == alert.id,
                 AlertDispatchLog.subscription_id == sub.id
@@ -1367,7 +1299,6 @@ def approve_and_broadcast_incident(
 
             if not existing_dispatch:
                 channel = "in-app"
-                # If subscriber provided Web Push credentials, attempt push delivery
                 if sub.push_endpoint and sub.push_p256dh and sub.push_auth:
                     push_success = dispatch_web_push_notification(
                         push_endpoint=sub.push_endpoint,

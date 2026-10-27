@@ -35,7 +35,6 @@ export default function IncidentDetailPanel({
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [showDispatchSelector, setShowDispatchSelector] = useState(false);
 
-  // Emergency Alert Push/Broadcast States
   const [showApprovalForm, setShowApprovalForm] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [customInstructions, setCustomInstructions] = useState('');
@@ -60,12 +59,10 @@ export default function IncidentDetailPanel({
     return <LifeBuoy className="w-3.5 h-3.5 text-[#697C58]" />;
   };
 
-  // If NO incident selected: Show District Fleet Readiness Monitor!
   if (!incident) {
     const availableCount = teams.filter((t) => t.status === 'Available').length;
     return (
       <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden">
-        {/* Header */}
         <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC]/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5">
             <Radio className="w-3.5 h-3.5 text-[#16A34A]" />
@@ -78,14 +75,12 @@ export default function IncidentDetailPanel({
           </span>
         </div>
 
-        {/* Guidance Notice */}
         <div className="p-3 bg-[#FCFAF6] border-b border-[#DFD8C8] text-xs text-[#5A6354] leading-relaxed">
           <p>
             Select any incident from the <strong className="text-[#343B30]">Queue</strong> or <strong className="text-[#343B30]">Tactical Map</strong> to execute nearest-unit Haversine dispatch and status transitions.
           </p>
         </div>
 
-        {/* Fleet listing - Clean table rows instead of cards */}
         <div className="flex-1 overflow-y-auto divide-y divide-[#DFD8C8]">
           {teams.map((team) => (
             <div
@@ -133,7 +128,6 @@ export default function IncidentDetailPanel({
 
   return (
     <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden" aria-label="Incident Mission Deck">
-      {/* Flight Deck Header */}
       <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC] flex items-start justify-between gap-2 shrink-0">
         <div>
           <div className="flex items-center gap-2">
@@ -162,9 +156,7 @@ export default function IncidentDetailPanel({
         </button>
       </div>
 
-      {/* Scrollable Mission Deck Content */}
       <div className="flex-1 overflow-y-auto divide-y divide-[#DFD8C8] text-xs">
-        {/* Transit Blockage Alert Banner if within 500m */}
         {incident.nearby_blockages && incident.nearby_blockages.length > 0 && (
           <div className="p-3 bg-[#FEF2F2] border-b border-[#FECACA] text-[#991B1B]" role="alert">
             <div className="flex items-start gap-2">
@@ -181,7 +173,6 @@ export default function IncidentDetailPanel({
           </div>
         )}
 
-        {/* Section 1: Ground Description */}
         <div className="p-3.5 space-y-1.5">
           <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block font-bold">
             Field Observation Log
@@ -191,7 +182,6 @@ export default function IncidentDetailPanel({
           </p>
         </div>
 
-        {/* Section 2: Technical Telemetry Key-Value Grid */}
         <div className="p-3.5 space-y-2">
           <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block font-bold">
             Operational Telemetry
@@ -237,7 +227,6 @@ export default function IncidentDetailPanel({
           </div>
         </div>
 
-        {/* Section 3: Citizen Field Photo Evidence */}
         {incident.photo_url && (
           <div className="p-3.5 space-y-2">
             <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block font-bold">
@@ -256,7 +245,6 @@ export default function IncidentDetailPanel({
           </div>
         )}
 
-        {/* Section 4: Public Emergency Alert Broadcast & Push Notification */}
         <div className="p-3.5 space-y-3 bg-[#FCFAF6] border-b border-[#DFD8C8]">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase tracking-wider text-[#343B30] font-bold flex items-center gap-1.5">
@@ -370,7 +358,6 @@ export default function IncidentDetailPanel({
           )}
         </div>
 
-        {/* Section 5: Response Team Dispatch Control (Ambulance / Fire / Rescue) */}
         {(() => {
           const assignedTeams = incident.assigned_resources || [];
           const assignedIds = new Set(assignedTeams.map((r) => r.id));
@@ -390,7 +377,6 @@ export default function IncidentDetailPanel({
                 </span>
               </div>
 
-              {/* Current Active Dispatches (with Recall option) */}
               {assignedTeams.length > 0 ? (
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-mono text-[#5A6354] uppercase font-bold block">
@@ -437,7 +423,6 @@ export default function IncidentDetailPanel({
                 </div>
               )}
 
-              {/* Decision: Whether to dispatch or keep on standby */}
               {!showDispatchSelector ? (
                 <div>
                   <button
@@ -518,7 +503,6 @@ export default function IncidentDetailPanel({
           );
         })()}
 
-        {/* Section 5: Status Transition Action Controls */}
         <div className="p-3.5 space-y-2.5 bg-[#EFE9DC]/30">
           <span className="text-[10px] font-mono uppercase tracking-wider text-[#5A6354] block font-bold">
             Commit Status Transition

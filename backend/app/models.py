@@ -27,7 +27,6 @@ class Incident(Base):
     severity = Column(Integer, default=1)  # 1 to 5
     photo_url = Column(String(255), nullable=True)
     
-    # Priority scoring fields
     priority_score = Column(Integer, default=0)
     priority_level = Column(String(20), default="Low")  # Critical, High, Medium, Low
     score_breakdown = Column(Text, nullable=True)  # JSON-encoded string of scoring parts
@@ -35,7 +34,6 @@ class Incident(Base):
     # Status: Reported -> Assigned -> In Progress -> Resolved, or Rejected
     status = Column(String(20), default="Reported", index=True)
     
-    # Independent Operator Verification & Approval Fields
     is_verified = Column(Boolean, default=False, index=True)
     verified_at = Column(DateTime, nullable=True)
     verified_by = Column(String(50), nullable=True)
@@ -43,7 +41,6 @@ class Incident(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     assignments = relationship("Assignment", back_populates="incident", cascade="all, delete-orphan")
     updates = relationship("IncidentUpdate", back_populates="incident", order_by="IncidentUpdate.created_at.desc()", cascade="all, delete-orphan")
     alert = relationship("EmergencyAlert", back_populates="incident", uselist=False, cascade="all, delete-orphan")
@@ -61,7 +58,6 @@ class Resource(Base):
     contact_number = Column(String(20), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     assignments = relationship("Assignment", back_populates="resource")
 
 
@@ -75,7 +71,6 @@ class Assignment(Base):
     released_at = Column(DateTime, nullable=True)
     status = Column(String(20), default="Active")  # Active, Completed, Cancelled
 
-    # Relationships
     incident = relationship("Incident", back_populates="assignments")
     resource = relationship("Resource", back_populates="assignments")
 
@@ -91,7 +86,6 @@ class IncidentUpdate(Base):
     comment = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     incident = relationship("Incident", back_populates="updates")
 
 
@@ -115,7 +109,6 @@ class AlertSubscription(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     dispatches = relationship("AlertDispatchLog", back_populates="subscription", cascade="all, delete-orphan")
 
 
@@ -136,7 +129,6 @@ class EmergencyAlert(Base):
     dispatched_subscribers_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     incident = relationship("Incident", back_populates="alert")
     dispatches = relationship("AlertDispatchLog", back_populates="alert", cascade="all, delete-orphan")
 
@@ -153,6 +145,5 @@ class AlertDispatchLog(Base):
     is_read = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     alert = relationship("EmergencyAlert", back_populates="dispatches")
     subscription = relationship("AlertSubscription", back_populates="dispatches")
