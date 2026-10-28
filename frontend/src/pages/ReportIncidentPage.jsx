@@ -203,13 +203,13 @@ export default function ReportIncidentPage() {
               <div className="w-12 h-12 bg-[#EEF2E6] border border-[#BAC7AF] text-[#697C58] rounded-full flex items-center justify-center mx-auto mb-3">
                 <CheckCircle2 className="w-6 h-6" aria-hidden="true" />
               </div>
-              <span className="text-[10px] font-mono text-[#697C58] uppercase tracking-widest block font-bold">
+              <span className="text-[11px] font-mono text-[#697C58] uppercase tracking-widest block font-bold">
                 INCIDENT REGISTERED IN QUEUE
               </span>
-              <h1 className="text-xl font-bold text-[#343B30] mt-1">
+              <h1 className="font-display text-2xl font-bold text-[#343B30] mt-1.5 tracking-tight">
                 Emergency Dispatch Record Established
               </h1>
-              <p className="text-xs text-[#5A6354] mt-1 max-w-sm mx-auto">
+              <p className="text-xs sm:text-sm text-[#5A6354] mt-1.5 max-w-sm mx-auto leading-relaxed">
                 Municipal response operators have received your triage ticket and are analyzing nearby response units.
               </p>
             </div>
@@ -217,11 +217,11 @@ export default function ReportIncidentPage() {
             <div className="p-6 space-y-4">
               <div className="p-4 rounded-lg bg-[#FFFFFF] border border-[#DFD8C8] flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-mono text-[#5A6354] uppercase block font-semibold">Your Tracking ID</span>
-                  <span className="text-2xl font-mono font-bold text-[#697C58]">{submittedReport.tracking_id}</span>
+                  <span className="text-[10px] font-mono text-[#5A6354] uppercase block font-semibold tracking-wider">Your Tracking ID</span>
+                  <span className="text-2xl sm:text-3xl font-mono font-extrabold text-[#697C58] tracking-widest">{submittedReport.tracking_id}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] font-mono text-[#5A6354] uppercase block font-semibold">Triage Priority</span>
+                  <span className="text-[10px] font-mono text-[#5A6354] uppercase block font-semibold tracking-wider">Triage Priority</span>
                   <span className="text-sm font-mono font-bold text-[#343B30]">
                     {submittedReport.priority_level} ({submittedReport.priority_score} pts)
                   </span>
@@ -348,14 +348,20 @@ export default function ReportIncidentPage() {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-6.5rem)]">
-            <div className="lg:col-span-5 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r border-[#DFD8C8] bg-[#FCFAF6] space-y-6 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col w-full">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12">
+            <div className="lg:col-span-5 p-4 sm:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-[#DFD8C8] bg-[#FCFAF6] space-y-6">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#343B30]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#CF806B]" />
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#697C58]">
+                    Citizen Field Telemetry
+                  </span>
+                </div>
+                <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#343B30]">
                   Report an Emergency Incident
                 </h1>
-                <p className="text-xs text-[#5A6354] mt-1 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#5A6354] mt-1.5 leading-relaxed font-sans">
                   Provide ground observation data for the Dehradun district response coordination desk. No account required.
                 </p>
               </div>
@@ -369,7 +375,7 @@ export default function ReportIncidentPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between border-b border-[#DFD8C8] pb-1">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-[#697C58] font-bold">
                     01. Hazard Category <span className="text-[#DC2626]">*</span>
                   </span>
                 </div>
@@ -386,7 +392,7 @@ export default function ReportIncidentPage() {
                         onClick={() => setIncidentType(item.name)}
                         className={`p-2.5 rounded text-left text-xs font-mono transition-colors flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#697C58] ${
                           isSelected
-                            ? 'bg-[#EEF2E6] border border-[#697C58] text-[#455239] font-bold'
+                            ? 'bg-[#EEF2E6] border border-[#697C58] text-[#455239] font-bold shadow-xs'
                             : 'bg-[#FFFFFF] border border-[#DFD8C8] text-[#343B30] hover:border-[#BAC7AF]'
                         }`}
                       >
@@ -400,7 +406,7 @@ export default function ReportIncidentPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between border-b border-[#DFD8C8] pb-1">
-                  <label htmlFor="incident-description" className="text-[10px] font-mono uppercase tracking-wider text-[#697C58] font-bold">
+                  <label htmlFor="incident-description" className="text-[11px] font-mono uppercase tracking-wider text-[#697C58] font-bold">
                     02. Ground Situation &amp; Landmark Description <span className="text-[#DC2626]">*</span>
                   </label>
                 </div>
@@ -411,7 +417,7 @@ export default function ReportIncidentPage() {
                   placeholder="State water levels, trapped residents, road conditions, cross-streets, or landmark references..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full text-xs font-mono rounded border border-[#DFD8C8] p-3 bg-[#FFFFFF] text-[#343B30] placeholder-[#7C8775] focus:outline-none focus:border-[#697C58] focus:ring-1 focus:ring-[#697C58]"
+                  className="w-full text-xs font-sans rounded border border-[#DFD8C8] p-3 bg-[#FFFFFF] text-[#343B30] placeholder-[#7C8775] focus:outline-none focus:border-[#697C58] focus:ring-1 focus:ring-[#697C58] leading-relaxed"
                 />
               </div>
 

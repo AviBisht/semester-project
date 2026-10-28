@@ -39,7 +39,7 @@ export default function OperatorLoginPage() {
   };
 
   return (
-    <div className="flex-1 min-h-[calc(100vh-3.5rem)] grid grid-cols-1 lg:grid-cols-12 bg-[#F5F0E5]">
+    <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 bg-[#F5F0E5]">
       <div className="lg:col-span-5 relative min-h-[260px] lg:min-h-full overflow-hidden bg-[#343B30] flex flex-col justify-between p-6 sm:p-10 text-[#F5F0E5]">
         <img
           src="/dehradun_aerial.jpg"
@@ -60,10 +60,10 @@ export default function OperatorLoginPage() {
           <span className="text-[10px] font-mono uppercase tracking-widest text-[#BAC7AF] font-bold block mb-1">
             District Operational Security
           </span>
-          <h2 className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-white">
+          <h2 className="text-xl sm:text-2xl font-bold font-display tracking-tight text-white">
             Dehradun Emergency Coordination Grid
           </h2>
-          <p className="text-xs text-[#EFE9DC]/90 mt-2 leading-relaxed">
+          <p className="text-xs text-[#EFE9DC]/90 mt-2 leading-relaxed font-sans">
             Restricted access gate for authorized municipal coordinators, disaster response liaisons, and emergency dispatch commanders.
           </p>
         </div>
@@ -80,10 +80,10 @@ export default function OperatorLoginPage() {
                 Operator Clearance Required
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#343B30] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-[#343B30] tracking-tight">
               Sign In to Command Console
             </h1>
-            <p className="text-xs text-[#5A6354] mt-1.5 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#5A6354] mt-1.5 leading-relaxed font-sans">
               Authenticate with your district operational credentials to manage the live incident queue and dispatch nearest rescue units.
             </p>
           </div>

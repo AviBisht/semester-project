@@ -106,7 +106,7 @@ export default function TrackReportPage() {
   };
 
   return (
-    <div className="flex-1 w-full bg-[#F5F0E5] text-[#343B30] pb-16">
+    <div className="flex-1 w-full bg-[#F5F0E5] text-[#343B30] pb-8">
       <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-2 mb-2">
@@ -115,10 +115,10 @@ export default function TrackReportPage() {
               Dehradun District Emergency Operations Centre (DEOC) &bull; Official Citizen Verification
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#343B30] tracking-tight">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#343B30] tracking-tight">
             Incident Dispatch Status Docket
           </h1>
-          <p className="text-xs sm:text-sm text-[#5A6354] mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#5A6354] mt-1.5 max-w-2xl leading-relaxed font-sans">
             Enter your official 8-character Incident Tracking ID to track real-time dispatch milestones, responding team contacts, and municipal audit history.
           </p>
 
@@ -217,13 +217,13 @@ export default function TrackReportPage() {
                     </div>
                   </div>
 
-                  <div className="bg-black/20 p-4 rounded-md border border-white/15 font-mono shrink-0 text-left md:text-right">
-                    <span className="text-[10px] text-white/70 block uppercase">Docket Number</span>
-                    <span className="text-2xl font-bold text-white tracking-wide block">
+                  <div className="bg-black/25 p-4 rounded-lg border border-white/20 font-mono shrink-0 text-left md:text-right">
+                    <span className="text-[10px] text-white/70 block uppercase tracking-widest font-semibold">Incident Docket Number</span>
+                    <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-widest block font-mono">
                       {incidentData.tracking_id}
                     </span>
-                    <span className="text-[11px] text-white/80 mt-1 block">
-                      Triage Score: {incidentData.priority_score} pts ({incidentData.priority_level})
+                    <span className="text-[11px] text-white/90 mt-1 block font-mono font-medium">
+                      Triage Score: <strong className="text-white">{incidentData.priority_score} pts</strong> ({incidentData.priority_level})
                     </span>
                   </div>
                 </div>

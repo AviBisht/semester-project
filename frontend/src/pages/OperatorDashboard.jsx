@@ -172,7 +172,7 @@ export default function OperatorDashboard() {
   const availableTeamsCount = teams.filter((t) => t.status === 'Available').length;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full overflow-hidden bg-[#F5F0E5]">
+    <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden bg-[#F5F0E5]">
       <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="text-xs sm:text-sm font-bold tracking-tight text-[#343B30] flex items-center gap-2 font-mono uppercase">

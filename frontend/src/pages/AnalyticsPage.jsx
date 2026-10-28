@@ -63,7 +63,7 @@ export default function AnalyticsPage() {
   const resolutionRate = total > 0 ? ((resolved / total) * 100).toFixed(1) : '0.0';
 
   return (
-    <div className="flex-1 w-full bg-[#F5F0E5] text-[#343B30] pb-20">
+    <div className="flex-1 w-full bg-[#F5F0E5] text-[#343B30] pb-8">
       <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -73,10 +73,10 @@ export default function AnalyticsPage() {
                 Dehradun District Disaster Management Authority (DDMA) &bull; Intelligence Bureau
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#343B30] tracking-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#343B30] tracking-tight">
               Operational Telemetry &amp; Hazard Classification Report
             </h1>
-            <p className="text-xs sm:text-sm text-[#5A6354] mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#5A6354] mt-1.5 max-w-2xl leading-relaxed font-sans">
               Official district response metrics, aggregate incident triage volumes, and hazard distribution across the Dehradun municipal grid.
             </p>
           </div>
@@ -93,10 +93,10 @@ export default function AnalyticsPage() {
       <div className="border-b border-[#DFD8C8] bg-[#FCFAF6]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#DFD8C8]">
           <div className="p-6 sm:p-8">
-            <span className="text-[10px] font-mono text-[#5A6354] uppercase tracking-widest font-bold block mb-1">
+            <span className="text-[11px] font-mono text-[#5A6354] uppercase tracking-widest font-bold block mb-1">
               TOTAL INCIDENTS LOGGED
             </span>
-            <div className="text-4xl sm:text-5xl font-mono font-bold text-[#343B30] tracking-tight">
+            <div className="text-4xl sm:text-5xl font-mono font-extrabold text-[#343B30] tracking-tight">
               {total}
             </div>
             <span className="text-xs text-[#5A6354] mt-2 block font-mono">

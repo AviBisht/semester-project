@@ -54,7 +54,7 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FCFAF6] border-b border-[#DFD8C8]">
+    <header className="sticky top-0 z-40 bg-[#FCFAF6] border-b border-[#DFD8C8] shrink-0">
       <div className="w-full px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
           <Link to="/" className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#697C58] rounded-md">
@@ -80,7 +80,7 @@ export default function Navbar() {
                 </span>
               </div>
               <span className="text-[10px] text-[#5A6354] font-mono uppercase tracking-wider block leading-none mt-0.5">
-                Emergency Coordination &amp; Triage System
+                Emergency Coordination
               </span>
             </div>
           </Link>

@@ -16,6 +16,7 @@ html {
   background-color: #F5F0E5;
   color: #343B30;
   min-height: 100%;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -25,8 +26,10 @@ body {
   color: #343B30;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  min-height: 100%;
   min-height: 100vh;
   min-height: 100dvh;
+  overscroll-behavior-y: none;
 }
 
 #root {
@@ -35,6 +38,15 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Prevent nested scroll chaining and touchpad momentum bounce */
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto,
+[data-scroll-container] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Custom leaflet map fixes for earthy emergency cartography */
