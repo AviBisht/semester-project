@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { Lock, User, AlertCircle, Eye, EyeOff, ShieldCheck, Terminal, Radio } from 'lucide-react';
+import dehradunAerial from '../assets/dehradun_aerial.jpg';
 
 export default function OperatorLoginPage() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export default function OperatorLoginPage() {
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 bg-[#F5F0E5]">
       <div className="lg:col-span-5 relative min-h-[260px] lg:min-h-full overflow-hidden bg-[#343B30] flex flex-col justify-between p-6 sm:p-10 text-[#F5F0E5]">
         <img
-          src="/dehradun_aerial.jpg"
+          src={dehradunAerial}
           alt="Aerial view of Dehradun valley and lush green Himalayan foothills"
           className="absolute inset-0 w-full h-full object-cover object-center"
         />

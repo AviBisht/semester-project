@@ -16,7 +16,7 @@ html {
   background-color: #F5F0E5;
   color: #343B30;
   min-height: 100%;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
 }
 
 body {
@@ -29,7 +29,7 @@ body {
   min-height: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
 }
 
 #root {
@@ -40,13 +40,13 @@ body {
   flex-direction: column;
 }
 
-/* Prevent nested scroll chaining and touchpad momentum bounce */
+/* Smooth touch momentum scrolling on scroll containers */
 .overflow-y-auto,
 .overflow-x-auto,
 .overflow-auto,
 [data-scroll-container] {
-  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* Custom leaflet map fixes for earthy emergency cartography */

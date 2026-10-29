@@ -85,7 +85,7 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <nav aria-label="Platform Sections" className="hidden md:flex items-center gap-1">
+          <nav aria-label="Platform Sections" className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.path;
@@ -157,7 +157,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <nav aria-label="Mobile Navigation" className="flex md:hidden border-t border-[#DFD8C8] bg-[#FCFAF6] px-2 py-1.5 justify-around text-xs">
+      <nav aria-label="Mobile Navigation" className="flex lg:hidden border-t border-[#DFD8C8] bg-[#FCFAF6] px-2 py-1.5 justify-around text-xs">
         {navLinks.map((link) => {
           const Icon = link.icon;
           const isActive = location.pathname === link.path;

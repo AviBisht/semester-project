@@ -172,7 +172,7 @@ export default function OperatorDashboard() {
   const availableTeamsCount = teams.filter((t) => t.status === 'Available').length;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden bg-[#F5F0E5]">
+    <div className="flex-1 flex flex-col min-h-0 w-full h-full overflow-hidden bg-[#F5F0E5]">
       <div className="bg-[#FCFAF6] border-b border-[#DFD8C8] px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="text-xs sm:text-sm font-bold tracking-tight text-[#343B30] flex items-center gap-2 font-mono uppercase">
@@ -234,7 +234,7 @@ export default function OperatorDashboard() {
         </div>
       </div>
 
-      <nav aria-label="Dashboard Panels" className="flex lg:hidden bg-[#FCFAF6] border-b border-[#DFD8C8] p-1 justify-around text-xs font-mono">
+      <nav aria-label="Dashboard Panels" className="flex lg:hidden bg-[#FCFAF6] border-b border-[#DFD8C8] p-1 justify-around text-xs font-mono shrink-0">
         <button
           onClick={() => setMobileTab('feed')}
           className={`flex-1 py-1 rounded text-center transition-colors ${
@@ -261,10 +261,10 @@ export default function OperatorDashboard() {
         </button>
       </nav>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 grid-rows-1 lg:grid-cols-[320px_1fr_380px] lg:grid-rows-1">
         <div
-          className={`w-full lg:w-[320px] shrink-0 h-full ${
-            mobileTab === 'feed' ? 'block' : 'hidden lg:block'
+          className={`w-full lg:w-[320px] shrink-0 h-full min-h-0 overflow-hidden flex flex-col ${
+            mobileTab === 'feed' ? 'flex' : 'hidden lg:flex'
           }`}
         >
           <IncidentTable
@@ -279,7 +279,7 @@ export default function OperatorDashboard() {
         </div>
 
         <div
-          className={`flex-1 h-full relative ${
+          className={`w-full h-full min-h-0 overflow-hidden relative ${
             mobileTab === 'map' ? 'block' : 'hidden lg:block'
           }`}
         >
@@ -294,8 +294,8 @@ export default function OperatorDashboard() {
         </div>
 
         <div
-          className={`w-full lg:w-[380px] shrink-0 h-full ${
-            mobileTab === 'deck' ? 'block' : 'hidden lg:block'
+          className={`w-full lg:w-[380px] shrink-0 h-full min-h-0 overflow-hidden flex flex-col ${
+            mobileTab === 'deck' ? 'flex' : 'hidden lg:flex'
           }`}
         >
           <IncidentDetailPanel

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PriorityBadge from './PriorityBadge';
 import { API_BASE_URL } from '../api';
 import {
@@ -17,7 +17,8 @@ import {
   CheckCircle2,
   PhoneCall,
   BellRing,
-  ShieldCheck
+  ShieldCheck,
+  Camera
 } from 'lucide-react';
 
 export default function IncidentDetailPanel({
@@ -34,6 +35,11 @@ export default function IncidentDetailPanel({
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [showDispatchSelector, setShowDispatchSelector] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [incident?.id]);
 
   const [showApprovalForm, setShowApprovalForm] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
@@ -62,7 +68,7 @@ export default function IncidentDetailPanel({
   if (!incident) {
     const availableCount = teams.filter((t) => t.status === 'Available').length;
     return (
-      <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden">
+      <div className="flex flex-col h-full min-h-0 w-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden">
         <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC]/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5">
             <Radio className="w-3.5 h-3.5 text-[#16A34A]" />
@@ -75,13 +81,13 @@ export default function IncidentDetailPanel({
           </span>
         </div>
 
-        <div className="p-3 bg-[#FCFAF6] border-b border-[#DFD8C8] text-xs text-[#5A6354] leading-relaxed">
+        <div className="p-3 bg-[#FCFAF6] border-b border-[#DFD8C8] text-xs text-[#5A6354] leading-relaxed shrink-0">
           <p>
             Select any incident from the <strong className="text-[#343B30]">Queue</strong> or <strong className="text-[#343B30]">Tactical Map</strong> to execute nearest-unit Haversine dispatch and status transitions.
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto divide-y divide-[#DFD8C8]">
+        <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-[#DFD8C8]">
           {teams.map((team) => (
             <div
               key={team.id}
@@ -127,7 +133,7 @@ export default function IncidentDetailPanel({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden" aria-label="Incident Mission Deck">
+    <div className="flex flex-col h-full min-h-0 w-full bg-[#FCFAF6] border-l border-[#DFD8C8] overflow-hidden" aria-label="Incident Mission Deck">
       <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC] flex items-start justify-between gap-2 shrink-0">
         <div>
           <div className="flex items-center gap-2">
@@ -156,7 +162,7 @@ export default function IncidentDetailPanel({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto divide-y divide-[#DFD8C8] text-xs">
+      <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-[#DFD8C8] text-xs pb-16 lg:pb-6">
         {incident.nearby_blockages && incident.nearby_blockages.length > 0 && (
           <div className="p-3 bg-[#FEF2F2] border-b border-[#FECACA] text-[#991B1B]" role="alert">
             <div className="flex items-start gap-2">
@@ -233,11 +239,20 @@ export default function IncidentDetailPanel({
               Citizen Photo Evidence
             </span>
             <div className="rounded border border-[#DFD8C8] overflow-hidden bg-[#EFE9DC]">
-              <img
-                src={`${API_BASE_URL}${incident.photo_url}`}
-                alt="Evidence"
-                className="w-full h-36 object-cover"
-              />
+              {imageError ? (
+                <div className="w-full py-6 px-4 flex flex-col items-center justify-center text-center bg-[#EFE9DC] text-[#7C8775] gap-1.5">
+                  <Camera className="w-6 h-6 opacity-60 text-[#5A6354]" />
+                  <span className="text-[11px] font-mono text-[#343B30] font-medium">Photo evidence attachment missing on disk</span>
+                  <span className="text-[10px] font-mono text-[#7C8775]">Reference: {incident.photo_url}</span>
+                </div>
+              ) : (
+                <img
+                  src={`${API_BASE_URL}${incident.photo_url}`}
+                  alt={`Citizen evidence photo for incident ${incident.tracking_id}`}
+                  className="w-full max-h-48 object-cover"
+                  onError={() => setImageError(true)}
+                />
+              )}
               <div className="p-1.5 bg-[#FFFFFF] text-[10px] font-mono text-[#7C8775]">
                 Attached to Incident #{incident.tracking_id}
               </div>

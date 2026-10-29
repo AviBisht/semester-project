@@ -58,7 +58,7 @@ export default function IncidentTable({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FCFAF6] border-r border-[#DFD8C8]">
+    <div className="flex flex-col h-full min-h-0 w-full bg-[#FCFAF6] border-r border-[#DFD8C8] overflow-hidden">
       <div className="p-3 border-b border-[#DFD8C8] bg-[#EFE9DC]/70 space-y-2.5 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function IncidentTable({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto divide-y divide-[#DFD8C8]">
+      <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-[#DFD8C8]">
         {sortedIncidents.length === 0 ? (
           <div className="p-8 text-center text-xs font-mono text-[#7C8775] italic">
             No incidents found matching active triage filter.

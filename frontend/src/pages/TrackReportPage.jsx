@@ -15,7 +15,8 @@ import {
   Activity,
   Radio,
   FileCheck2,
-  ChevronRight
+  ChevronRight,
+  Camera
 } from 'lucide-react';
 
 export default function TrackReportPage() {
@@ -26,6 +27,7 @@ export default function TrackReportPage() {
   const [incidentData, setIncidentData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     if (initialId) {
@@ -39,6 +41,7 @@ export default function TrackReportPage() {
 
     setIsLoading(true);
     setErrorMessage('');
+    setImageError(false);
     setIncidentData(null);
 
     try {
@@ -350,11 +353,20 @@ export default function TrackReportPage() {
                     Citizen Photo Evidence Attachment
                   </span>
                   <div className="border border-[#DFD8C8] overflow-hidden bg-[#EFE9DC]">
-                    <img
-                      src={`${API_BASE_URL}${incidentData.photo_url}`}
-                      alt="Citizen evidence"
-                      className="w-full h-64 object-cover"
-                    />
+                    {imageError ? (
+                      <div className="w-full py-8 px-4 flex flex-col items-center justify-center text-center bg-[#EFE9DC] text-[#7C8775] gap-2">
+                        <Camera className="w-7 h-7 opacity-60 text-[#5A6354]" />
+                        <span className="text-xs font-mono text-[#343B30] font-semibold">Photo evidence archive unavailable</span>
+                        <span className="text-[11px] font-mono text-[#7C8775]">Reference: {incidentData.photo_url}</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={`${API_BASE_URL}${incidentData.photo_url}`}
+                        alt={`Citizen evidence for incident ${incidentData.tracking_id}`}
+                        className="w-full max-h-72 object-cover"
+                        onError={() => setImageError(true)}
+                      />
+                    )}
                     <div className="p-2 bg-[#FCFAF6] text-[10px] font-mono text-[#5A6354] border-t border-[#DFD8C8]">
                       Timestamped visual attachment archived on DECTS storage bucket
                     </div>
